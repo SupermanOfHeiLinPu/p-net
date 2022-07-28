@@ -18,8 +18,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/tools")
 project (PROFINET VERSION 0.2.0)
 
-set(CMAKE_C_COMPILER "/home/cc/software/openwrt-21.02/bin/targets/ramips/mt76x8/openwrt-toolchain-ramips-mt76x8_gcc-8.4.0_musl.Linux-x86_64/toolchain-mipsel_24kc_gcc-8.4.0_musl/bin/mipsel-openwrt-linux-gcc")
-set(CMAKE_CXX_COMPILER "=/home/cc/software/openwrt-21.02/bin/targets/ramips/mt76x8/openwrt-toolchain-ramips-mt76x8_gcc-8.4.0_musl.Linux-x86_64/toolchain-mipsel_24kc_gcc-8.4.0_musl/bin/mipsel-openwrt-linux-g++")
 # Default settings if this is the main project
 if (CMAKE_PROJECT_NAME STREQUAL PROFINET)
   include(CTest)
@@ -176,9 +174,9 @@ if (PNET_OPTION_DRIVER_ENABLE)
   include(${CMAKE_CURRENT_SOURCE_DIR}/src/drivers/drivers.cmake)
 endif ()
 
-if (CMAKE_PROJECT_NAME STREQUAL PROFINET AND BUILD_TESTING)
-  add_executable(pf_test "")
-endif()
+#if (CMAKE_PROJECT_NAME STREQUAL PROFINET AND BUILD_TESTING)
+#  add_executable(pf_test "")
+#endif()
 
 # Platform configuration
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/${CMAKE_SYSTEM_NAME}.cmake)
@@ -231,11 +229,11 @@ install (FILES
 add_subdirectory (src)
 add_subdirectory (samples/pn_dev)
 
-if (CMAKE_PROJECT_NAME STREQUAL PROFINET AND BUILD_TESTING)
-  add_subdirectory (test)
-  include(AddGoogleTest)
-  add_gtest(pf_test)
-endif()
+#if (CMAKE_PROJECT_NAME STREQUAL PROFINET AND BUILD_TESTING)
+#  add_subdirectory (test)
+#  include(AddGoogleTest)
+#  add_gtest(pf_test)
+#endif()
 
 # Doxygen configuration
 cmake_policy(SET CMP0057 NEW)

@@ -107,10 +107,10 @@ file(COPY
   ${PROFINET_BINARY_DIR}/
   )
 
-if (BUILD_TESTING)
-  set(GOOGLE_TEST_INDIVIDUAL TRUE)
-  target_include_directories(pf_test
-    PRIVATE
-    src/ports/linux
-    )
-endif()
+#if (BUILD_TESTING)
+#  set(GOOGLE_TEST_INDIVIDUAL TRUE)
+#  target_include_directories(pf_test
+#    PRIVATE
+#    src/ports/linux
+#    )
+#endif()
