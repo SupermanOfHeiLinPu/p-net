@@ -83,7 +83,7 @@ static void app_handle_data_led_state (bool led_state)
 
    if (led_state != previous_led_state)
    {
-      app_set_led (APP_DATA_LED_ID, led_state);
+      //app_set_led (APP_DATA_LED_ID, led_state);
    }
    previous_led_state = led_state;
 }
