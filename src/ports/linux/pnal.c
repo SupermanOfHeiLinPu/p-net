@@ -279,6 +279,7 @@ int pnal_set_ip_suite (
  * @param duplex           In:    DUPLEX_FULL, DUPLEX_HALF or DUPLEX_UNKNOWN
  * @return  The MAU type
  */
+#if 0
 static pnal_eth_mau_t calculate_mau_type (
    uint8_t port_type,
    uint32_t speed,
@@ -355,13 +356,14 @@ static pnal_eth_mau_t calculate_mau_type (
 
    return PNAL_ETH_MAU_UNKNOWN;
 }
-
+#endif
 /**
  * Calculate advertised capabilities
  *
  * @param advertised       In:    Linux advertised capabilities as a bitfield
  * @return Profinet advertised capabilities as a bitfield
  */
+#if 0
 static uint16_t calculate_capabilities (uint32_t advertised)
 {
    uint16_t out = 0;
@@ -398,9 +400,11 @@ static uint16_t calculate_capabilities (uint32_t advertised)
 
    return out;
 }
+#endif
 
 int pnal_eth_get_status (const char * interface_name, pnal_eth_status_t * status)
 {
+#if 0
    /* TODO: Possibly use the new ETHTOOL_GLINKSETTINGS instead of ETHTOOL_GSET
       See:
    https://stackoverflow.com/questions/41822920/how-to-get-ethtool-settings */
@@ -446,6 +450,14 @@ int pnal_eth_get_status (const char * interface_name, pnal_eth_status_t * status
    close (control_socket);
 
    return ret;
+#endif
+   status->is_autonegotiation_supported = false;
+   status->is_autonegotiation_enabled = false;
+   status->autonegotiation_advertised_capabilities = 0;
+
+   status->operational_mau_type = PNAL_ETH_MAU_COPPER_100BaseTX_FULL_DUPLEX;
+   status->running = true;
+   return 0;
 }
 
 int pnal_get_interface_index (const char * interface_name)
