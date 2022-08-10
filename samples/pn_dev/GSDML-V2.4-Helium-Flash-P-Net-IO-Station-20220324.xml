@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<ISO15745Profile xmlns="http://www.profibus.com/GSDML/2003/11/DeviceProfile" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.profibus.com/GSDML/2003/11/DeviceProfile ..\xsd\GSDML-DeviceProfile-V2.4.xsd">
+   <!-- ProfileHeader definition as defined in ISO 15745-1. Please do not change the content. -->
+   <ProfileHeader>
+      <ProfileIdentification>PROFINET Device Profile</ProfileIdentification>
+      <ProfileRevision>1.00</ProfileRevision>
+      <ProfileName>Device Profile for PROFINET Devices</ProfileName>
+      <ProfileSource>PROFIBUS Nutzerorganisation e. V. (PNO)</ProfileSource>
+      <ProfileClassID>Device</ProfileClassID>
+      <ISO15745Reference>
+         <ISO15745Part>4</ISO15745Part>
+         <ISO15745Edition>1</ISO15745Edition>
+         <ProfileTechnology>GSDML</ProfileTechnology>
+      </ISO15745Reference>
+   </ProfileHeader>
+   <ProfileBody>
+      <DeviceIdentity VendorID="0xCE11" DeviceID="0x0002">
+         <InfoText TextId="IDT_INFO_Device"/>
+         <VendorName Value="Helium-Flash"/>
+      </DeviceIdentity>
+      <DeviceFunction>
+         <Family MainFamily="Helium-Flash PN Station I/O" ProductFamily="Helium-Flash PN Station"/>
+      </DeviceFunction>
+      <ApplicationProcess>
+         <DeviceAccessPointList>
+            <DeviceAccessPointItem ID="IDD_1" PNIO_Version="V2.4" PhysicalSlots="0..1" ModuleIdentNumber="0x00000001" MinDeviceInterval="32" DNS_CompatibleName="Helium-Flash-DEV" FixedInSlots="0" ObjectUUID_LocalIndex="1" DeviceAccessSupported="false" MultipleWriteSupported="true" CheckDeviceID_Allowed="true" NameOfStationNotTransferable="false" LLDP_NoD_Supported="true" ResetToFactoryModes="1..2">
+               <ModuleInfo>
+                  <Name TextId="IDT_MODULE_NAME_DAP1"/>
+                  <InfoText TextId="IDT_INFO_DAP1"/>
+                  <VendorName Value="RT-Labs"/>
+                  <OrderNumber Value="123456 Abcdefghijkl"/>
+                  <HardwareRelease Value="A1.0"/>
+                  <SoftwareRelease Value="V0.1.0"/>
+               </ModuleInfo>
+               <CertificationInfo ConformanceClass="B" ApplicationClass="" NetloadClass="I"/>
+               <IOConfigData MaxInputLength="244" MaxOutputLength="244"/>
+               <UseableModules>
+                  <ModuleItemRef ModuleItemTarget="IDM_30" AllowedInSlots="1..4"/>
+                  <ModuleItemRef ModuleItemTarget="IDM_31" AllowedInSlots="1..4"/>
+                  <ModuleItemRef ModuleItemTarget="IDM_32" AllowedInSlots="1..4"/>
+                  <ModuleItemRef ModuleItemTarget="IDM_40" AllowedInSlots="1..4"/>
+               </UseableModules>
+               <VirtualSubmoduleList>
+                  <VirtualSubmoduleItem ID="IDS_1" SubmoduleIdentNumber="0x00000001" Writeable_IM_Records="1 2 3" MayIssueProcessAlarm="false">
+                     <IOData/>
+                     <ModuleInfo>
+                        <Name TextId="IDT_MODULE_NAME_DAP1"/>
+                        <InfoText TextId="IDT_INFO_DAP1"/>
+                     </ModuleInfo>
+                  </VirtualSubmoduleItem>
+               </VirtualSubmoduleList>
+               <SystemDefinedSubmoduleList>
+                  <InterfaceSubmoduleItem ID="IDS_I" SubmoduleIdentNumber="0x00008000" SubslotNumber="32768" TextId="IDT_NAME_IS" SupportedRT_Classes="RT_CLASS_1" SupportedProtocols="SNMP;LLDP" NetworkComponentDiagnosisSupported="false" PTP_BoundarySupported="true" DCP_BoundarySupported="true">
+                     <ApplicationRelations StartupMode="Advanced">
+                        <TimingProperties SendClock="32" ReductionRatio="1 2 4 8 16 32 64 128 256 512"/>
+                     </ApplicationRelations>
+                  </InterfaceSubmoduleItem>
+                  <PortSubmoduleItem ID="IDS_P1" SubmoduleIdentNumber="0x00008001" SubslotNumber="32769" TextId="IDT_NAME_PS1" MaxPortRxDelay="350" MaxPortTxDelay="160">
+                     <MAUTypeList>
+                        <MAUTypeItem Value="30"/>
+                        <MAUTypeItem Value="16"/>
+                        <MAUTypeItem Value="5"/>
+                     </MAUTypeList>
+                  </PortSubmoduleItem>
+               </SystemDefinedSubmoduleList>
+               <Graphics>
+                  <GraphicItemRef Type="DeviceSymbol" GraphicItemTarget="Helium-FlashImage"/>
+               </Graphics>
+            </DeviceAccessPointItem>
+         </DeviceAccessPointList>
+         <ModuleList>
+            <ModuleItem ID="IDM_30" ModuleIdentNumber="0x00000030">
+               <ModuleInfo>
+                  <Name TextId="HF_PN_STATION_IO"/>
+                  <InfoText TextId="HF_PN_STATION_IO_INFO"/>
+                  <HardwareRelease Value="1.0"/>
+                  <SoftwareRelease Value="1.0"/>
+               </ModuleInfo>
+               <VirtualSubmoduleList>
+                  <VirtualSubmoduleItem ID="IDSM_130" SubmoduleIdentNumber="0x0130" MayIssueProcessAlarm="true">
+                     <IOData>
+                        <Input Consistency="All items consistency">
+                           <DataItem DataType="Unsigned32" TextId="HF_PN_STATION_I_0" UseAsBits="true"/>
+                           <DataItem DataType="Unsigned32" TextId="HF_PN_STATION_I_1" UseAsBits="true"/>
+                           <DataItem DataType="Unsigned32" TextId="HF_PN_STATION_I_2" UseAsBits="true"/>
+                           <DataItem DataType="Unsigned32" TextId="HF_PN_STATION_I_3" UseAsBits="true"/>
+                           <DataItem DataType="Unsigned32" TextId="HF_PN_STATION_I_4" UseAsBits="true"/>
+                           <DataItem DataType="Unsigned32" TextId="HF_PN_STATION_I_5" UseAsBits="true"/>
+                           <DataItem DataType="Unsigned32" TextId="HF_PN_STATION_I_6" UseAsBits="true"/>
+                           <DataItem DataType="Unsigned32" TextId="HF_PN_STATION_I_7" UseAsBits="true"/>
+                           <DataItem DataType="Unsigned32" TextId="HF_PN_STATION_I_8" UseAsBits="true"/>
+                           <DataItem DataType="Unsigned32" TextId="HF_PN_STATION_I_9" UseAsBits="true"/>
+                        </Input>
+                        <Output Consistency="All items consistency">
+                           <DataItem DataType="Unsigned32" TextId="HF_PN_STATION_O_0" UseAsBits="true"/>
+                           <DataItem DataType="Unsigned32" TextId="HF_PN_STATION_O_1" UseAsBits="true"/>
+                           <DataItem DataType="Unsigned32" TextId="HF_PN_STATION_O_2" UseAsBits="true"/>
+                           <DataItem DataType="Unsigned32" TextId="HF_PN_STATION_O_3" UseAsBits="true"/>
+                           <DataItem DataType="Unsigned32" TextId="HF_PN_STATION_O_4" UseAsBits="true"/>
+                           <DataItem DataType="Unsigned32" TextId="HF_PN_STATION_O_5" UseAsBits="true"/>
+                           <DataItem DataType="Unsigned32" TextId="HF_PN_STATION_O_6" UseAsBits="true"/>
+                           <DataItem DataType="Unsigned32" TextId="HF_PN_STATION_O_7" UseAsBits="true"/>
+                           <DataItem DataType="Unsigned32" TextId="HF_PN_STATION_O_8" UseAsBits="true"/>
+                           <DataItem DataType="Unsigned32" TextId="HF_PN_STATION_O_9" UseAsBits="true"/>
+                        </Output>
+                     </IOData>
+                     <ModuleInfo>
+                        <Name TextId="HF_PN_STATION_IO"/>
+                        <InfoText TextId="HF_PN_STATION_IO_INFO"/>
+                     </ModuleInfo>
+                  </VirtualSubmoduleItem>
+               </VirtualSubmoduleList>
+            </ModuleItem>
+         </ModuleList>
+         <GraphicsList>
+            <GraphicItem ID="Helium-FlashImage" GraphicFile="Helium-Flash-Station"/>
+         </GraphicsList>
+         <ExternalTextList>
+            <PrimaryLanguage>
+               <Text TextId="IDT_INFO_Device" Value="https://github.com/"/>
+               <Text TextId="IDT_MODULE_NAME_DAP1" Value="Helium-Flash Station"/>
+               <Text TextId="IDT_INFO_DAP1" Value="Helium-Flash Station https://github.com/"/>
+               <Text TextId="IDT_NAME_IS" Value="X1"/>
+               <Text TextId="IDT_NAME_PS1" Value="X1 P1"/>
+               <Text TextId="IDT_NAME_PS2" Value="X1 P2"/>
+               <!--module name-->
+               <Text TextId="HF_PN_STATION_IO" Value="IO A Word"/>
+               <!--module info -->
+               <Text TextId="HF_PN_STATION_IO_INFO" Value="IO A Word"/>
+               <!--dataitem name-->
+               <Text TextId="HF_PN_STATION_I_0" Value="Input 0"/>
+               <Text TextId="HF_PN_STATION_I_1" Value="Input 1"/>
+               <Text TextId="HF_PN_STATION_I_2" Value="Input 2"/>
+               <Text TextId="HF_PN_STATION_I_3" Value="Input 3"/>
+               <Text TextId="HF_PN_STATION_I_4" Value="Input 4"/>
+               <Text TextId="HF_PN_STATION_I_5" Value="Input 5"/>
+               <Text TextId="HF_PN_STATION_I_6" Value="Input 6"/>
+               <Text TextId="HF_PN_STATION_I_7" Value="Input 7"/>
+               <Text TextId="HF_PN_STATION_I_8" Value="Input 8"/>
+               <Text TextId="HF_PN_STATION_I_9" Value="Input 9"/>
+               <Text TextId="HF_PN_STATION_O_0" Value="Output 0"/>
+               <Text TextId="HF_PN_STATION_O_1" Value="Output 1"/>
+               <Text TextId="HF_PN_STATION_O_2" Value="Output 2"/>
+               <Text TextId="HF_PN_STATION_O_3" Value="Output 3"/>
+               <Text TextId="HF_PN_STATION_O_4" Value="Output 4"/>
+               <Text TextId="HF_PN_STATION_O_5" Value="Output 5"/>
+               <Text TextId="HF_PN_STATION_O_6" Value="Output 6"/>
+               <Text TextId="HF_PN_STATION_O_7" Value="Output 7"/>
+               <Text TextId="HF_PN_STATION_O_8" Value="Output 8"/>
+               <Text TextId="HF_PN_STATION_O_9" Value="Output 9"/>
+
+               <!--ParameterRecordDataItem name-->
+            </PrimaryLanguage>
+         </ExternalTextList>
+      </ApplicationProcess>
+   </ProfileBody>
+</ISO15745Profile>
