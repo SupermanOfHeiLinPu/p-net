@@ -1259,8 +1259,7 @@ static void app_handle_demo_pnet_api (app_data_t * app)
          p_subslot = &app->main_api.slots[slot].subslots[subslot_ix];
          if (
             app_utils_subslot_is_input (p_subslot) &&
-            (p_subslot->submodule_id == APP_GSDML_SUBMOD_ID_DIGITAL_IN ||
-             p_subslot->submodule_id == APP_GSDML_SUBMOD_ID_DIGITAL_IN_OUT))
+            (p_subslot->submodule_id == APP_GSDML_SUBMOD_ID_IO))
          {
             found_inputsubslot = true;
             break;

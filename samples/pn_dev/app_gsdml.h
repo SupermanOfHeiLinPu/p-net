@@ -39,10 +39,10 @@ extern "C" {
 
 #define APP_GSDML_API 0
 
-#define APP_GSDML_DEFAULT_STATION_NAME "rt-labs-dev"
+#define APP_GSDML_DEFAULT_STATION_NAME "Helium-Flash-DEV"
 
 /* GSDML tag: VendorID */
-#define APP_GSDML_VENDOR_ID 0x0493
+#define APP_GSDML_VENDOR_ID 0xCE11
 
 /* GSDML tag: DeviceID */
 #define APP_GSDML_DEVICE_ID 0x0002
@@ -77,7 +77,7 @@ extern "C" {
    (PNET_SUPPORTED_IM1 | PNET_SUPPORTED_IM2 | PNET_SUPPORTED_IM3)
 
 /* GSDML tag: OrderNumber */
-#define APP_GSDML_ORDER_ID "12345 Abcdefghijk"
+#define APP_GSDML_ORDER_ID "Helium-Flash 2020"
 
 /* GSDML tag: ModuleInfo / Name */
 #define APP_GSDML_PRODUCT_NAME "P-Net Sample Application"
@@ -138,18 +138,10 @@ typedef struct
    uint16_t length;
 } app_gsdml_param_t;
 
-#define APP_GSDML_MOD_ID_8_0_DIGITAL_IN     0x00000030
-#define APP_GSDML_MOD_ID_0_8_DIGITAL_OUT    0x00000031
-#define APP_GSDML_MOD_ID_8_8_DIGITAL_IN_OUT 0x00000032
-#define APP_GSDML_MOD_ID_ECHO               0x00000040
-#define APP_GSDML_SUBMOD_ID_DIGITAL_IN      0x00000130
-#define APP_GSDML_SUBMOD_ID_DIGITAL_OUT     0x00000131
-#define APP_GSDML_SUBMOD_ID_DIGITAL_IN_OUT  0x00000132
-#define APP_GSDML_SUBMOD_ID_ECHO            0x00000140
-#define APP_GSDML_INPUT_DATA_DIGITAL_SIZE   1 /* bytes */
-#define APP_GSDML_OUTPUT_DATA_DIGITAL_SIZE  1 /* bytes */
-#define APP_GSDML_INPUT_DATA_ECHO_SIZE      8 /* bytes */
-#define APP_GSDML_OUTPUT_DATA_ECHO_SIZE     APP_GSDML_INPUT_DATA_ECHO_SIZE
+#define APP_GSDML_MOD_ID_IO     0x00000030
+#define APP_GSDML_SUBMOD_ID_IO      0x00000130
+#define APP_GSDML_OUTPUT_SIZE   40 /* bytes */
+#define APP_GSDML_INPUT_SIZE   40 /* bytes */
 #define APP_GSDML_ALARM_PAYLOAD_SIZE        1 /* bytes */
 
 /**

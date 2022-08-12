@@ -29,7 +29,7 @@
                   <Name TextId="IDT_MODULE_NAME_DAP1"/>
                   <InfoText TextId="IDT_INFO_DAP1"/>
                   <VendorName Value="Helium-Flash"/>
-                  <OrderNumber Value="123456 Abcdefghijkl"/>
+                  <OrderNumber Value="Helium-Flash 2020"/>
                   <HardwareRelease Value="A1.0"/>
                   <SoftwareRelease Value="V0.1.0"/>
                </ModuleInfo>

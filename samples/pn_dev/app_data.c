@@ -45,28 +45,8 @@ static uint32_t app_param_echo_gain = 1; /* Network endianness */
 
 /* Digital submodule process data
  * The stored value is shared between all digital submodules in this example. */
-static uint8_t inputdata[APP_GSDML_INPUT_DATA_DIGITAL_SIZE] = {0};
-static uint8_t outputdata[APP_GSDML_OUTPUT_DATA_DIGITAL_SIZE] = {0};
-static uint8_t counter = 0;
-
-/* Network endianness */
-static uint8_t echo_inputdata[APP_GSDML_INPUT_DATA_ECHO_SIZE] = {0};
-static uint8_t echo_outputdata[APP_GSDML_OUTPUT_DATA_ECHO_SIZE] = {0};
-
-CC_PACKED_BEGIN
-typedef struct CC_PACKED app_echo_data
-{
-   /* Network endianness.
-      Used as a float, but we model it as a 4-byte integer to easily
-      do endianness conversion */
-   uint32_t echo_float_bytes;
-
-   /* Network endianness */
-   uint32_t echo_int;
-} app_echo_data_t;
-CC_PACKED_END
-CC_STATIC_ASSERT (sizeof (app_echo_data_t) == APP_GSDML_INPUT_DATA_ECHO_SIZE);
-CC_STATIC_ASSERT (sizeof (app_echo_data_t) == APP_GSDML_OUTPUT_DATA_ECHO_SIZE);
+static uint8_t inputdata[APP_GSDML_INPUT_SIZE] = {0};
+static uint8_t outputdata[APP_GSDML_OUTPUT_SIZE] = {0};
 
 /**
  * Set LED state.
@@ -96,64 +76,16 @@ uint8_t * app_data_get_input_data (
    uint16_t * size,
    uint8_t * iops)
 {
-   float inputfloat;
-   float outputfloat;
-   uint32_t hostorder_inputfloat_bytes;
-   uint32_t hostorder_outputfloat_bytes;
-   app_echo_data_t * p_echo_inputdata = (app_echo_data_t *)&echo_inputdata;
-   app_echo_data_t * p_echo_outputdata = (app_echo_data_t *)&echo_outputdata;
-
    if (size == NULL || iops == NULL)
    {
       return NULL;
    }
 
-   if (
-      submodule_id == APP_GSDML_SUBMOD_ID_DIGITAL_IN ||
-      submodule_id == APP_GSDML_SUBMOD_ID_DIGITAL_IN_OUT)
+   if (submodule_id == APP_GSDML_SUBMOD_ID_IO)
    {
-      /* Prepare digital input data
-       * Lowest 7 bits: Counter    Most significant bit: Button
-       */
-      inputdata[0] = counter++;
-      if (button_pressed)
-      {
-         inputdata[0] |= 0x80;
-      }
-      else
-      {
-         inputdata[0] &= 0x7F;
-      }
-
-      *size = APP_GSDML_INPUT_DATA_DIGITAL_SIZE;
+      *size = APP_GSDML_INPUT_SIZE;
       *iops = PNET_IOXS_GOOD;
       return inputdata;
-   }
-
-   if (submodule_id == APP_GSDML_SUBMOD_ID_ECHO)
-   {
-      /* Calculate echodata input (to the PLC)
-       * by multiplying the output (from the PLC) with a gain factor
-       */
-
-      /* Integer */
-      p_echo_inputdata->echo_int = CC_TO_BE32 (
-         CC_FROM_BE32 (p_echo_outputdata->echo_int) *
-         CC_FROM_BE32 (app_param_echo_gain));
-
-      /* Float */
-      /* Use memcopy to avoid strict-aliasing rule warnings */
-      hostorder_outputfloat_bytes =
-         CC_FROM_BE32 (p_echo_outputdata->echo_float_bytes);
-      memcpy (&outputfloat, &hostorder_outputfloat_bytes, sizeof (outputfloat));
-      inputfloat = outputfloat * CC_FROM_BE32 (app_param_echo_gain);
-      memcpy (&hostorder_inputfloat_bytes, &inputfloat, sizeof (outputfloat));
-      p_echo_inputdata->echo_float_bytes =
-         CC_TO_BE32 (hostorder_inputfloat_bytes);
-
-      *size = APP_GSDML_INPUT_DATA_ECHO_SIZE;
-      *iops = PNET_IOXS_GOOD;
-      return echo_inputdata;
    }
 
    /* Automated RT Tester scenario 2 - unsupported (sub)module */
@@ -167,34 +99,17 @@ int app_data_set_output_data (
    uint8_t * data,
    uint16_t size)
 {
-   bool led_state;
-
    if (data == NULL)
    {
       return -1;
    }
 
    if (
-      submodule_id == APP_GSDML_SUBMOD_ID_DIGITAL_OUT ||
-      submodule_id == APP_GSDML_SUBMOD_ID_DIGITAL_IN_OUT)
+      submodule_id == APP_GSDML_SUBMOD_ID_IO)
    {
-      if (size == APP_GSDML_OUTPUT_DATA_DIGITAL_SIZE)
+      if (size == APP_GSDML_OUTPUT_SIZE)
       {
-         memcpy (outputdata, data, size);
-
-         /* Most significant bit: LED */
-         led_state = (outputdata[0] & 0x80) > 0;
-         app_handle_data_led_state (led_state);
-
-         return 0;
-      }
-   }
-   else if (submodule_id == APP_GSDML_SUBMOD_ID_ECHO)
-   {
-      if (size == APP_GSDML_OUTPUT_DATA_ECHO_SIZE)
-      {
-         memcpy (echo_outputdata, data, size);
-
+         memcpy(outputdata, data, APP_GSDML_OUTPUT_SIZE);
          return 0;
       }
    }
