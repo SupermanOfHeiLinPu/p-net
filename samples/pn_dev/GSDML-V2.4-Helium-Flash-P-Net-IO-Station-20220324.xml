@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<ISO15745Profile xmlns="http://www.profibus.com/GSDML/2003/11/DeviceProfile" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.profibus.com/GSDML/2003/11/DeviceProfile ..\xsd\GSDML-DeviceProfile-V2.4.xsd">
+<ISO15745Profile xmlns="http://www.profibus.com/GSDML/2003/11/DeviceProfile"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.profibus.com/GSDML/2003/11/DeviceProfile ..\xsd\GSDML-DeviceProfile-V2.4.xsd">
    <!-- ProfileHeader definition as defined in ISO 15745-1. Please do not change the content. -->
    <ProfileHeader>
       <ProfileIdentification>PROFINET Device Profile</ProfileIdentification>
@@ -19,7 +20,7 @@
          <VendorName Value="Helium-Flash"/>
       </DeviceIdentity>
       <DeviceFunction>
-         <Family MainFamily="Helium-Flash PN Station I/O" ProductFamily="Helium-Flash PN Station"/>
+         <Family MainFamily="I/O" ProductFamily="Helium Flash PN-IO"/>
       </DeviceFunction>
       <ApplicationProcess>
          <DeviceAccessPointList>
@@ -27,7 +28,7 @@
                <ModuleInfo>
                   <Name TextId="IDT_MODULE_NAME_DAP1"/>
                   <InfoText TextId="IDT_INFO_DAP1"/>
-                  <VendorName Value="RT-Labs"/>
+                  <VendorName Value="Helium-Flash"/>
                   <OrderNumber Value="123456 Abcdefghijkl"/>
                   <HardwareRelease Value="A1.0"/>
                   <SoftwareRelease Value="V0.1.0"/>
