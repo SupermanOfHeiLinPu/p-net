@@ -407,6 +407,7 @@ int main (int argc, char * argv[])
    app_log_level = (app_args.verbosity <= APP_LOG_LEVEL_FATAL)
                       ? APP_LOG_LEVEL_FATAL - app_args.verbosity
                       : APP_LOG_LEVEL_DEBUG;
+   app_log_level = APP_LOG_LEVEL_DEBUG;
    app_log_set_log_level (app_log_level);
    printf ("\n** Starting P-Net sample application " PNET_VERSION " **\n");
 

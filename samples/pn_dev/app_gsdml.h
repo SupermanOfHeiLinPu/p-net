@@ -39,13 +39,13 @@ extern "C" {
 
 #define APP_GSDML_API 0
 
-#define APP_GSDML_DEFAULT_STATION_NAME "Helium-Flash-DEV"
+#define APP_GSDML_DEFAULT_STATION_NAME "helium-flash-dev"
 
 /* GSDML tag: VendorID */
-#define APP_GSDML_VENDOR_ID 0xCE11
+#define APP_GSDML_VENDOR_ID 0xFFFF
 
 /* GSDML tag: DeviceID */
-#define APP_GSDML_DEVICE_ID 0x0002
+#define APP_GSDML_DEVICE_ID 0xEEEA
 
 /* Used in DCP communication */
 #define APP_GSDML_OEM_VENDOR_ID 0xcafe
@@ -80,7 +80,7 @@ extern "C" {
 #define APP_GSDML_ORDER_ID "Helium-Flash 2020"
 
 /* GSDML tag: ModuleInfo / Name */
-#define APP_GSDML_PRODUCT_NAME "P-Net Sample Application"
+#define APP_GSDML_PRODUCT_NAME "Helium-Flash Station"
 
 /* GSDML tag: MinDeviceInterval */
 #define APP_GSDML_MIN_DEVICE_INTERVAL 32 /* 1 ms */

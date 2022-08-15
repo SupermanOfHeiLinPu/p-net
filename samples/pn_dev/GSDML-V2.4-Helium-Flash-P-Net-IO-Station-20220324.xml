@@ -15,7 +15,7 @@
       </ISO15745Reference>
    </ProfileHeader>
    <ProfileBody>
-      <DeviceIdentity VendorID="0xCE11" DeviceID="0x0002">
+      <DeviceIdentity VendorID="0xFFFF" DeviceID="0xEEEA">
          <InfoText TextId="IDT_INFO_Device"/>
          <VendorName Value="Helium-Flash"/>
       </DeviceIdentity>
@@ -24,7 +24,7 @@
       </DeviceFunction>
       <ApplicationProcess>
          <DeviceAccessPointList>
-            <DeviceAccessPointItem ID="IDD_1" PNIO_Version="V2.4" PhysicalSlots="0..1" ModuleIdentNumber="0x00000001" MinDeviceInterval="32" DNS_CompatibleName="Helium-Flash-DEV" FixedInSlots="0" ObjectUUID_LocalIndex="1" DeviceAccessSupported="false" MultipleWriteSupported="true" CheckDeviceID_Allowed="true" NameOfStationNotTransferable="false" LLDP_NoD_Supported="true" ResetToFactoryModes="1..2">
+            <DeviceAccessPointItem ID="IDD_1" PNIO_Version="V2.4" PhysicalSlots="0..2" ModuleIdentNumber="0x00000001" MinDeviceInterval="32" DNS_CompatibleName="helium-flash-dev" FixedInSlots="0" ObjectUUID_LocalIndex="1" DeviceAccessSupported="false" MultipleWriteSupported="true" CheckDeviceID_Allowed="true" NameOfStationNotTransferable="false" LLDP_NoD_Supported="true" ResetToFactoryModes="1..2">
                <ModuleInfo>
                   <Name TextId="IDT_MODULE_NAME_DAP1"/>
                   <InfoText TextId="IDT_INFO_DAP1"/>
@@ -34,12 +34,10 @@
                   <SoftwareRelease Value="V0.1.0"/>
                </ModuleInfo>
                <CertificationInfo ConformanceClass="B" ApplicationClass="" NetloadClass="I"/>
-               <IOConfigData MaxInputLength="244" MaxOutputLength="244"/>
+               <IOConfigData MaxInputLength="1440" MaxOutputLength="1440"/>
                <UseableModules>
-                  <ModuleItemRef ModuleItemTarget="IDM_30" AllowedInSlots="1..4"/>
-                  <ModuleItemRef ModuleItemTarget="IDM_31" AllowedInSlots="1..4"/>
-                  <ModuleItemRef ModuleItemTarget="IDM_32" AllowedInSlots="1..4"/>
-                  <ModuleItemRef ModuleItemTarget="IDM_40" AllowedInSlots="1..4"/>
+                  <ModuleItemRef ModuleItemTarget="IDM_30" AllowedInSlots="1"/>
+                  <ModuleItemRef ModuleItemTarget="IDM_31" AllowedInSlots="2"/>
                </UseableModules>
                <VirtualSubmoduleList>
                   <VirtualSubmoduleItem ID="IDS_1" SubmoduleIdentNumber="0x00000001" Writeable_IM_Records="1 2 3" MayIssueProcessAlarm="false">
@@ -72,8 +70,8 @@
          <ModuleList>
             <ModuleItem ID="IDM_30" ModuleIdentNumber="0x00000030">
                <ModuleInfo>
-                  <Name TextId="HF_PN_STATION_IO"/>
-                  <InfoText TextId="HF_PN_STATION_IO_INFO"/>
+                  <Name TextId="HF_PN_STATION_INPUT"/>
+                  <InfoText TextId="HF_PN_STATION_INPUT_INFO"/>
                   <HardwareRelease Value="1.0"/>
                   <SoftwareRelease Value="1.0"/>
                </ModuleInfo>
@@ -92,6 +90,25 @@
                            <DataItem DataType="Unsigned32" TextId="HF_PN_STATION_I_8" UseAsBits="true"/>
                            <DataItem DataType="Unsigned32" TextId="HF_PN_STATION_I_9" UseAsBits="true"/>
                         </Input>
+                     </IOData>
+                     <ModuleInfo>
+                        <Name TextId="HF_PN_STATION_INPUT"/>
+                        <InfoText TextId="HF_PN_STATION_INPUT_INFO"/>
+                     </ModuleInfo>
+                  </VirtualSubmoduleItem>
+               </VirtualSubmoduleList>
+            </ModuleItem>
+
+            <ModuleItem ID="IDM_31" ModuleIdentNumber="0x00000031">
+               <ModuleInfo>
+                  <Name TextId="HF_PN_STATION_OUTPUT"/>
+                  <InfoText TextId="HF_PN_STATION_OUTPUT_INFO"/>
+                  <HardwareRelease Value="1.0"/>
+                  <SoftwareRelease Value="1.0"/>
+               </ModuleInfo>
+               <VirtualSubmoduleList>
+                  <VirtualSubmoduleItem ID="IDSM_131" SubmoduleIdentNumber="0x0131" MayIssueProcessAlarm="true">
+                     <IOData>
                         <Output Consistency="All items consistency">
                            <DataItem DataType="Unsigned32" TextId="HF_PN_STATION_O_0" UseAsBits="true"/>
                            <DataItem DataType="Unsigned32" TextId="HF_PN_STATION_O_1" UseAsBits="true"/>
@@ -106,13 +123,23 @@
                         </Output>
                      </IOData>
                      <ModuleInfo>
-                        <Name TextId="HF_PN_STATION_IO"/>
-                        <InfoText TextId="HF_PN_STATION_IO_INFO"/>
+                        <Name TextId="HF_PN_STATION_OUTPUT"/>
+                        <InfoText TextId="HF_PN_STATION_OUTPUT_INFO"/>
                      </ModuleInfo>
                   </VirtualSubmoduleItem>
                </VirtualSubmoduleList>
             </ModuleItem>
+
          </ModuleList>
+         <LogBookEntryList>
+            <LogBookEntryItem Status="2130510">
+               <!--Custom log book entry for sample application-->
+               <!--Error code 0x20  Error decode 0x82  Error code 1 0x4E-->
+               <ErrorCode2Value>
+                  <Name TextId="IDT_CUSTOM_LOGBOOK_1"/>
+               </ErrorCode2Value>
+            </LogBookEntryItem>
+         </LogBookEntryList>
          <GraphicsList>
             <GraphicItem ID="Helium-FlashImage" GraphicFile="Helium-Flash-Station"/>
          </GraphicsList>
@@ -124,10 +151,13 @@
                <Text TextId="IDT_NAME_IS" Value="X1"/>
                <Text TextId="IDT_NAME_PS1" Value="X1 P1"/>
                <Text TextId="IDT_NAME_PS2" Value="X1 P2"/>
+               <Text TextId="IDT_CUSTOM_LOGBOOK_1" Value="Custom Logbook entry"/>
                <!--module name-->
-               <Text TextId="HF_PN_STATION_IO" Value="IO A Word"/>
+               <Text TextId="HF_PN_STATION_INPUT" Value="Input"/>
+               <Text TextId="HF_PN_STATION_OUTPUT" Value="Output"/>
                <!--module info -->
-               <Text TextId="HF_PN_STATION_IO_INFO" Value="IO A Word"/>
+               <Text TextId="HF_PN_STATION_INPUT_INFO" Value="Intput 32 bits"/>
+               <Text TextId="HF_PN_STATION_OUTPUT_INFO" Value="Output 32 bits"/>
                <!--dataitem name-->
                <Text TextId="HF_PN_STATION_I_0" Value="Input 0"/>
                <Text TextId="HF_PN_STATION_I_1" Value="Input 1"/>
