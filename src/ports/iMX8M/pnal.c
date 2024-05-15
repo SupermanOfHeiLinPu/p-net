@@ -7,6 +7,7 @@
  *
  * www.rt-labs.com
  * Copyright 2021 rt-labs AB, Sweden.
+ * Copyright 2023 NXP
  *
  * This software is dual-licensed under GPLv3 and a commercial
  * license. See the file LICENSE.md distributed with this software for
@@ -19,7 +20,6 @@
 #include "osal.h"
 #include "osal_log.h"
 
-#include <fatfs.h>
 #include <lwip/apps/snmp.h>
 #include <lwip/netif.h>
 #include <lwip/snmp.h>
@@ -45,7 +45,10 @@ int pnal_set_ip_suite (
    ip_addr.addr = htonl (*p_ipaddr);
    ip_mask.addr = htonl (*p_netmask);
    ip_gw.addr = htonl (*p_gw);
+   
+   LOCK_TCPIP_CORE();
    netif_set_addr (netif_default, &ip_addr, &ip_mask, &ip_gw);
+   UNLOCK_TCPIP_CORE();
 
    return 0;
 }
@@ -81,13 +84,7 @@ pnal_ipaddr_t pnal_get_gateway (const char * interface_name)
 
 int pnal_get_hostname (char * hostname)
 {
-   if (netif_default->hostname == NULL)
-   {
-      return -1;
-   }
-
-   strncpy (hostname, netif_default->hostname, PNAL_HOSTNAME_MAX_SIZE);
-   hostname[PNAL_HOSTNAME_MAX_SIZE - 1] = '\0';
+   strcpy (hostname, netif_default->hostname);
    return 0;
 }
 
@@ -146,77 +143,12 @@ int pnal_save_file (
    const void * object_2,
    size_t size_2)
 {
-   FIL fil;
-   FRESULT fres;
-   UINT count;
-   int ret = 0; /* Assume everything goes well */
-
-   if (!SDFatFSMounted)
-   {
-      LOG_ERROR (
-         PF_PNAL_LOG,
-         "PNAL(%d): SD-Card not mounted (%s)\n",
-         __LINE__,
-         fullpath);
-      return -1;
-   }
-
-   fres = f_open (&fil, fullpath, FA_WRITE | FA_OPEN_ALWAYS | FA_CREATE_ALWAYS);
-   if (fres != FR_OK)
-   {
-      LOG_ERROR (
-         PF_PNAL_LOG,
-         "PNAL(%d): Could not open file %s\n",
-         __LINE__,
-         fullpath);
-      return -1;
-   }
-
-   /* Write file contents */
-   if (size_1 > 0)
-   {
-      fres = f_write (&fil, object_1, size_1, &count);
-      if (fres != FR_OK || count != size_1)
-      {
-         ret = -1;
-         LOG_ERROR (
-            PF_PNAL_LOG,
-            "PNAL(%d): Failed to write file %s\n",
-            __LINE__,
-            fullpath);
-      }
-   }
-   if (size_2 > 0 && ret == 0)
-   {
-      fres = f_write (&fil, object_2, size_2, &count);
-      if (fres != FR_OK || count != size_2)
-      {
-         ret = -1;
-         LOG_ERROR (
-            PF_PNAL_LOG,
-            "PNAL(%d): Failed to write file %s (second buffer)\n",
-            __LINE__,
-            fullpath);
-      }
-   }
-
-   f_close (&fil);
-   return ret;
+   return -1;
 }
 
 void pnal_clear_file (const char * fullpath)
 {
-   if (!SDFatFSMounted)
-   {
-      LOG_ERROR (
-         PF_PNAL_LOG,
-         "PNAL(%d): SD-Card not mounted (%s)\n",
-         __LINE__,
-         fullpath);
-      return;
-   }
-   LOG_DEBUG (PF_PNAL_LOG, "PNAL(%d): Clearing file %s\n", __LINE__, fullpath);
-   f_unlink (fullpath);
+
 }
 
 int pnal_load_file (
@@ -226,62 +158,7 @@ int pnal_load_file (
    void * object_2,
    size_t size_2)
 {
-   FIL fil;
-   FRESULT fres;
-   UINT count;
-   int ret = 0; /* Assume everything goes well */
-
-   if (!SDFatFSMounted)
-   {
-      LOG_ERROR (
-         PF_PNAL_LOG,
-         "PNAL(%d): SD-Card not mounted (%s)\n",
-         __LINE__,
-         fullpath);
-      return -1;
-   }
-
-   fres = f_open (&fil, fullpath, FA_READ);
-   if (fres != FR_OK)
-   {
-      LOG_ERROR (
-         PF_PNAL_LOG,
-         "PNAL(%d): Could not yet open file %s\n",
-         __LINE__,
-         fullpath);
-      return -1;
-   }
-
-   /* Write file contents */
-   if (size_1 > 0)
-   {
-      fres = f_read (&fil, object_1, size_1, &count);
-      if (fres != FR_OK || count != size_1)
-      {
-         ret = -1;
-         LOG_ERROR (
-            PF_PNAL_LOG,
-            "PNAL(%d): Failed to read file %s\n",
-            __LINE__,
-            fullpath);
-      }
-   }
-   if (size_2 > 0 && ret == 0)
-   {
-      fres = f_read (&fil, object_2, size_2, &count);
-      if (fres != FR_OK || count != size_2)
-      {
-         ret = -1;
-         LOG_ERROR (
-            PF_PNAL_LOG,
-            "PNAL(%d): Failed to read file %s (second buffer)\n",
-            __LINE__,
-            fullpath);
-      }
-   }
-
-   f_close (&fil);
-   return ret;
+   return -1;
 }
 
 uint32_t pnal_get_system_uptime_10ms (void)
