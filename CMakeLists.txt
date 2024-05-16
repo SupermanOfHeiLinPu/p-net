@@ -14,6 +14,14 @@
 #*******************************************************************/
 
 cmake_minimum_required (VERSION 3.14)
+
+set(CMAKE_C_COMPILER "/opt/aarch64-buildroot-linux-gnu_sdk-buildroot/bin/aarch64-linux-gnu-gcc")
+set(CMAKE_CXX_COMPILER "/opt/aarch64-buildroot-linux-gnu_sdk-buildroot/bin/aarch64-linux-gnu-g++")
+set(D9_SDK_TARGET_SYSROOT "/opt/aarch64-buildroot-linux-gnu_sdk-buildroot/aarch64-buildroot-linux-gnu/sysroot/")
+add_compile_options("--sysroot=${D9_SDK_TARGET_SYSROOT}")
+
+set(BUILD_TESTING OFF)
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/tools")
 project (PROFINET VERSION 0.2.0)
