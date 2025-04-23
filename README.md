@@ -1,4 +1,4 @@
-# P-net
+# P-Net
 
 Profinet device stack for embedded systems
 

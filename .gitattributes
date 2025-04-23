@@ -22,3 +22,11 @@ src/ports/linux/set_profinet_leds text eol=lf
 *.PDF	 diff=astextplain
 *.rtf	 diff=astextplain
 *.RTF	 diff=astextplain
+
+/requirements.jenkins.* export-ignore
+/.docker export-ignore
+/.github export-ignore
+/.git* export-ignore
+/.jenkins export-ignore
+/.mutilatorrc export-ignore
+/scripts export-ignore

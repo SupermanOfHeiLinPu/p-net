@@ -1132,7 +1132,7 @@ int pf_fspm_cm_write_ind (
 
       if (ret == 0)
       {
-         pf_fspm_save_im (net);
+         pf_bg_worker_start_job (net, PF_BGJOB_SAVE_IM_NVM_DATA);
       }
    }
    else

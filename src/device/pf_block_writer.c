@@ -303,10 +303,9 @@ void pf_put_padding_align (
    uint8_t * p_bytes,
    uint16_t * p_pos)
 {
-   while (((*p_pos) - start_position) % align != 0)
-   {
-      pf_put_byte (0, res_len, p_bytes, p_pos);
-   }
+   /* Cast to unsigned to ensure the result is within 0 <= n < align bytes */
+   uint16_t n_bytes = (uint16_t)(align - ((*p_pos) - start_position)) % align;
+   pf_put_padding (n_bytes, res_len, p_bytes, p_pos);
 }
 
 /**
@@ -1105,10 +1104,7 @@ static void pf_put_one_ar (
       res_len,
       p_bytes,
       p_pos);
-   while (((*p_pos) % sizeof (uint32_t)) != 0)
-   {
-      pf_put_byte (0, res_len, p_bytes, p_pos);
-   }
+   pf_put_padding_align (0, sizeof (uint32_t), res_len, p_bytes, p_pos);
 #if PNET_OPTION_PARAMETER_SERVER
    pf_put_uint16 (
       is_big_endian,
@@ -1125,16 +1121,9 @@ static void pf_put_one_ar (
 #else
    pf_put_uint16 (is_big_endian, 0, res_len, p_bytes, p_pos);
 #endif
-   while (((*p_pos) % sizeof (uint32_t)) != 0)
-   {
-      pf_put_byte (0, res_len, p_bytes, p_pos);
-   }
-
+   pf_put_padding_align (0, sizeof (uint32_t), res_len, p_bytes, p_pos);
    pf_put_uint16 (is_big_endian, p_ar->nbr_iocrs, res_len, p_bytes, p_pos);
-   while (((*p_pos) % sizeof (uint32_t)) != 0)
-   {
-      pf_put_byte (0, res_len, p_bytes, p_pos);
-   }
+   pf_put_padding_align (0, sizeof (uint32_t), res_len, p_bytes, p_pos);
    for (ix = 0; ix < p_ar->nbr_iocrs; ix++)
    {
       pf_put_iocr (is_big_endian, p_ar, ix, res_len, p_bytes, p_pos);
@@ -1146,10 +1135,7 @@ static void pf_put_one_ar (
       res_len,
       p_bytes,
       p_pos);
-   while (((*p_pos) % sizeof (uint32_t)) != 0)
-   {
-      pf_put_byte (0, res_len, p_bytes, p_pos);
-   }
+   pf_put_padding_align (0, sizeof (uint32_t), res_len, p_bytes, p_pos);
    for (ix = 0; ix < p_ar->exp_ident.nbr_apis; ix++)
    {
       if ((api_filter == false) || (p_ar->exp_ident.api[ix].api == api_id))
@@ -1166,10 +1152,7 @@ static void pf_put_one_ar (
    /* Remember pos so the correct value can be inserted later */
    nbr_ar_data_pos = *p_pos;
    pf_put_uint16 (is_big_endian, 0, res_len, p_bytes, p_pos);
-   while (((*p_pos) % sizeof (uint32_t)) != 0)
-   {
-      pf_put_byte (0, res_len, p_bytes, p_pos);
-   }
+   pf_put_padding_align (0, sizeof (uint32_t), res_len, p_bytes, p_pos);
 
 #if PNET_OPTION_IR
    if (p_ar->nbr_ir_info > 0)

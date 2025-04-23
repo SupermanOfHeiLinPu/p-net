@@ -631,7 +631,7 @@ uint32_t pf_scheduler_sanitize_delay (
    CC_ASSERT (number_of_stack_ticks < 0x80000000); /* No rollover to 'negative'
                                                       numbers */
 
-   /* Calculate delay value for the sheduler */
+   /* Calculate delay value for the scheduler */
    resulting_delay = number_of_stack_ticks * stack_cycle_time;
    if (schedule_half_tick_in_advance == true)
    {

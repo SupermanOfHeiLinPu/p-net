@@ -532,6 +532,21 @@ int pf_ppm_set_data_and_iops (
       case PF_PPM_STATE_W_START:
       case PF_PPM_STATE_RUN:
          if (
+            (p_iodata->data_offset + data_len) >= sizeof (p_iocr->ppm.buffer_data) ||
+            (p_iodata->iops_offset + iops_len) >= sizeof (p_iocr->ppm.buffer_data))
+         {
+            LOG_ERROR (
+               PF_PPM_LOG,
+               "PPM(%d): Buffer of size %zu cannot contain data of size %u "
+               "starting at index %u and/or IOPS of size %u starting at %u\n",
+               __LINE__,
+               sizeof (p_iocr->ppm.buffer_data),
+               data_len,
+               p_iodata->data_offset,
+               iops_len,
+               p_iodata->iops_offset);
+         }
+         else if (
             (data_len == p_iodata->data_length) &&
             (iops_len == p_iodata->iops_length))
          {
@@ -699,6 +714,21 @@ int pf_ppm_get_data_and_iops (
          break;
       case PF_PPM_STATE_RUN:
          if (
+            (p_iodata->data_offset + p_iodata->data_length) >= sizeof (p_iocr->ppm.buffer_data) ||
+            (p_iodata->iops_offset + p_iodata->iops_length) >= sizeof (p_iocr->ppm.buffer_data))
+         {
+            LOG_ERROR (
+               PF_PPM_LOG,
+               "PPM(%d): Cannot read data of size %u starting at index %u "
+               "and/or IOPS of size %u starting at %u from buffer of size %zu\n",
+               __LINE__,
+               p_iodata->data_length,
+               p_iodata->data_offset,
+               p_iodata->iops_length,
+               p_iodata->iops_offset,
+               sizeof (p_iocr->ppm.buffer_data));
+         }
+         else if (
             (*p_data_len >= p_iodata->data_length) &&
             (*p_iops_len >= p_iodata->iops_length))
          {

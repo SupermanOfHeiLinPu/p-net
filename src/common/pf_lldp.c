@@ -587,44 +587,43 @@ void pf_lldp_get_chassis_id (pnet_t * net, pf_lldp_chassis_id_t * p_chassis_id)
       pf_cmina_get_device_macaddr (net);
    char station_name[PNET_STATION_NAME_MAX_SIZE]; /** Terminated */
 
-   if (
-      net->pf_interface.name_of_device_mode.mode ==
-      PF_LLDP_NAME_OF_DEVICE_MODE_LEGACY)
-   {
-      /*
-       * FIXME: Use of pf_cmina_get_station_name() is not thread-safe.
-       * Fix this, e.g. using a mutex.
-       */
-      pf_cmina_get_station_name (net, station_name);
-      p_chassis_id->len = strlen (station_name);
+   /*
+    * FIXME: Use of pf_cmina_get_station_name() is not thread-safe.
+    * Fix this, e.g. using a mutex.
+    */
+   pf_cmina_get_station_name (net, station_name);
+   p_chassis_id->len = strlen (station_name);
 
+   if (p_chassis_id->len == 0 || p_chassis_id->len >= PNET_LLDP_CHASSIS_ID_MAX_SIZE)
+   {
+      /* Use the device MAC address */
+      p_chassis_id->subtype = PF_LLDP_SUBTYPE_MAC;
+      p_chassis_id->len = sizeof (pnet_ethaddr_t);
+      memcpy (
+         p_chassis_id->string,
+         device_mac_address->addr,
+         sizeof (pnet_ethaddr_t));
+   }
+   else
+   {
       if (
-         p_chassis_id->len == 0 ||
-         p_chassis_id->len >= PNET_LLDP_CHASSIS_ID_MAX_SIZE)
-      {
-         /* Use the device MAC address */
-         p_chassis_id->subtype = PF_LLDP_SUBTYPE_MAC;
-         p_chassis_id->len = sizeof (pnet_ethaddr_t);
-         memcpy (
-            p_chassis_id->string,
-            device_mac_address->addr,
-            sizeof (pnet_ethaddr_t));
-      }
-      else
+         net->pf_interface.name_of_device_mode.mode ==
+         PF_LLDP_NAME_OF_DEVICE_MODE_LEGACY)
       {
          /* Use the station name (NameOfStation/NameOfInterface) */
          p_chassis_id->subtype = PF_LLDP_SUBTYPE_LOCALLY_ASSIGNED;
          memcpy (p_chassis_id->string, station_name, p_chassis_id->len);
       }
+      else /* PF_LLDP_NAME_OF_DEVICE_MODE_STANDARD */
+      {
+         p_chassis_id->subtype = PF_LLDP_SUBTYPE_LOCALLY_ASSIGNED;
+         p_chassis_id->len = pf_lldp_get_system_description (
+            net,
+            p_chassis_id->string,
+            sizeof (p_chassis_id->string));
+      }
    }
-   else /* PF_LLDP_NAME_OF_DEVICE_MODE_STANDARD */
-   {
-      p_chassis_id->subtype = PF_LLDP_SUBTYPE_LOCALLY_ASSIGNED;
-      p_chassis_id->len = pf_lldp_get_system_description (
-         net,
-         p_chassis_id->string,
-         sizeof (p_chassis_id->string));
-   }
+
    p_chassis_id->string[p_chassis_id->len] = '\0';
    p_chassis_id->is_valid = true;
 }

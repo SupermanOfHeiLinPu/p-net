@@ -383,6 +383,17 @@ int pf_cmdev_generate_submodule_diff (
    uint16_t subslot_number);
 
 /**
+ * Check the IOCR param of an AR for errors.
+ * @param p_ar             InOut: The AR instance.
+ * @param p_stat           Out:   Detailed error information if return != 0.
+ * @return  0  if no error was found.
+ *          -1 if an error was found.
+ */
+int pf_cmdev_check_iocr_param (
+   pf_ar_t * p_ar,
+   pnet_result_t * p_stat);
+
+/**
  * Return a string representation of the specified CMDEV state.
  * @param state            In:    The CMDEV state.
  * @return  A string representation of the CMDEV state.

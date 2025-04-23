@@ -22,7 +22,7 @@ extern "C" {
 
 #include <stdint.h>
 
-#include "options.h"
+#include "pnet_options.h"
 #include "pnet_api.h"
 #include "pf_includes.h"
 #include "osal.h"

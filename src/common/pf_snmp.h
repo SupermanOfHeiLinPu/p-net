@@ -291,6 +291,19 @@ void pf_snmp_data_init (pnet_t * net);
 void pf_snmp_data_clear (pnet_t * net);
 
 /**
+ * Resets SNMP related data.
+ *
+ * Zeroes in-memory data without removing files.
+ *
+ * Optionally also zeroes the "IM_Tag_Location" from I&M1
+ * (which typically is the same as SNMP SysLocation).
+ *
+ * @param net              InOut: The p-net stack instance.
+ * @param update_im        In: Whether to update I&M1.
+ */
+void pf_snmp_data_reset (pnet_t * net, bool update_im);
+
+/**
  * Removes SNMP related data files.
  *
  * Used by pf_snmp_data_clear() and other operations.
@@ -359,6 +372,15 @@ void pf_snmp_get_system_name (pnet_t * net, pf_snmp_system_name_t * p_name);
 int pf_snmp_set_system_name (pnet_t * net, const pf_snmp_system_name_t * p_name);
 
 /**
+ * Write system name to file.
+ *
+ * Intended for use by background worker thread.
+ *
+ * @param net              InOut: The p-net stack instance.
+ */
+void pf_snmp_save_system_name (pnet_t * net);
+
+/**
  * Get system contact.
  *
  * The value will be loaded from file.
@@ -392,6 +414,15 @@ int pf_snmp_set_system_contact (
    const pf_snmp_system_contact_t * p_contact);
 
 /**
+ * Write system contact to file.
+ *
+ * Intended for use by background worker thread.
+ *
+ * @param net              InOut: The p-net stack instance.
+ */
+void pf_snmp_save_system_contact (pnet_t * net);
+
+/**
  * Get system location.
  *
  * The value will be loaded from file. If file is not available,
@@ -412,19 +443,30 @@ void pf_snmp_get_system_location (
  *
  * The value will be stored to file.
  * The device location in I&M1 will also be replaced with the first
- * 22 characters of system location.
+ * 22 characters of system location if update_im is set.
  *
  * See IETF RFC 3418 (SNMP MIB-II) ch. 2 "Definitions". Relevant fields:
  * - SysLocation.
  *
  * @param net              InOut: The p-net stack instance.
  * @param p_location       In:    System location.
+ * @param update_im        In:    Whether to update I&M1.
  * @return  0  if the operation succeeded.
  *         -1 if an error occurred (could not store to file).
  */
 int pf_snmp_set_system_location (
    pnet_t * net,
-   const pf_snmp_system_location_t * p_location);
+   const pf_snmp_system_location_t * p_location,
+   bool update_im);
+
+/**
+ * Write system location to file.
+ *
+ * Intended for use by background worker thread.
+ *
+ * @param net              InOut: The p-net stack instance.
+ */
+void pf_snmp_save_system_location (pnet_t * net);
 
 /**
  * Get list of local ports.

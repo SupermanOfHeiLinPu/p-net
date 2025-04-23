@@ -224,7 +224,7 @@ TEST_F (SnmpTest, SnmpSetLocationGivenLargeString)
    const pf_snmp_system_location_t written = {"1234567890123456789012345"};
    int error;
 
-   error = pf_snmp_set_system_location (net, &written);
+   error = pf_snmp_set_system_location (net, &written, true);
 
    EXPECT_EQ (error, 0);
    EXPECT_STREQ (mock_file_data.filename, PF_FILENAME_SNMP_SYSLOCATION);
@@ -239,7 +239,7 @@ TEST_F (SnmpTest, SnmpSetLocationGivenSmallString)
    const pf_snmp_system_location_t written = {"small"};
    int error;
 
-   error = pf_snmp_set_system_location (net, &written);
+   error = pf_snmp_set_system_location (net, &written, true);
 
    EXPECT_EQ (error, 0);
    EXPECT_STREQ (mock_file_data.filename, PF_FILENAME_SNMP_SYSLOCATION);
@@ -256,7 +256,7 @@ TEST_F (SnmpTest, SnmpSetLocationGivenError)
 
    mock_file_data.is_save_failing = true;
 
-   error = pf_snmp_set_system_location (net, &written);
+   error = pf_snmp_set_system_location (net, &written, true);
 
    EXPECT_EQ (error, -1);
    EXPECT_STREQ (mock_fspm_data.im_location, "1234567890123456789012");

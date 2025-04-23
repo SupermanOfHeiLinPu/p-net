@@ -173,6 +173,17 @@ void pf_cmrpc_show (pnet_t * net, unsigned level);
  */
 void pf_memory_contents_show (const uint8_t * data, int size);
 
+/* Exported for testing only */
+int pf_cmrpc_dce_packet (
+   pnet_t * net,
+   uint32_t ip_addr,
+   uint16_t port,
+   const uint8_t * p_req,
+   uint32_t req_len,
+   uint8_t * p_res,
+   uint16_t * p_res_len,
+   bool * p_close_socket);
+
 #ifdef __cplusplus
 }
 #endif

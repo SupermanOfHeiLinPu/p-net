@@ -42,7 +42,7 @@
 #define TLV_BYTE_0(len, type) (((len) >> 8) | ((type) << 1))
 #define TLV_BYTE_1(len)       (((len) >> 0) & 0xff)
 #define TLV_TYPE(tlv)         ((tlv)[0] >> 1)
-#define TLV_LEN(tlv)          ((size_t) (((tlv)[0] << 8) + (tlv)[1]) & 0x1FF)
+#define TLV_LEN(tlv)          ((size_t)(((tlv)[0] << 8) + (tlv)[1]) & 0x1FF)
 
 static const char * chassis_id_test_sample_1 =
    "\x53\x43\x41\x4c\x41\x4e\x43\x45\x20\x58\x2d\x32\x30\x30\x20"
@@ -754,9 +754,20 @@ TEST_F (LldpTest, LldpParsePacketWithInvalidManagementAddresses)
 TEST_F (LldpTest, LldpGetChassisId)
 {
    pf_lldp_chassis_id_t chassis_id;
+   pnal_ethaddr_t mac;
+   mock_pnal_get_macaddress (net->pf_interface.main_port.name, &mac);
 
    memset (&chassis_id, 0xff, sizeof (chassis_id));
 
+   pf_lldp_get_chassis_id (net, &chassis_id);
+   EXPECT_EQ (chassis_id.subtype, PF_LLDP_SUBTYPE_MAC);
+   EXPECT_STREQ (chassis_id.string, (char *)mac.addr);
+   EXPECT_EQ (chassis_id.len, sizeof (mac));
+
+   strncpy (
+      net->cmina_current_dcp_ase.station_name,
+      "non_empty",
+      PNET_STATION_NAME_MAX_SIZE);
    pf_lldp_get_chassis_id (net, &chassis_id);
    EXPECT_EQ (chassis_id.subtype, PF_LLDP_SUBTYPE_LOCALLY_ASSIGNED);
    EXPECT_STREQ (

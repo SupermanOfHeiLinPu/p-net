@@ -247,6 +247,8 @@ void pf_snmp_data_init (pnet_t * net)
    CC_STATIC_ASSERT (
       sizeof (snmp->system_name.string) >= PNAL_HOSTNAME_MAX_SIZE);
 
+   net->snmp_mutex = os_mutex_create();
+
    /* sysContact */
    error = pf_file_load (
       directory,
@@ -314,6 +316,8 @@ void pf_snmp_data_clear (pnet_t * net)
    LOG_DEBUG (PF_SNMP_LOG, "SNMP(%d): Clearing SNMP data.\n", __LINE__);
    pf_snmp_remove_data_files (p_file_directory);
 
+   os_mutex_lock (net->snmp_mutex);
+
    memset (
       snmp->system_contact.string,
       '\0',
@@ -323,23 +327,40 @@ void pf_snmp_data_clear (pnet_t * net)
       snmp->system_location.string,
       '\0',
       sizeof (snmp->system_location.string));
+
+   os_mutex_unlock (net->snmp_mutex);
+}
+
+void pf_snmp_data_reset (pnet_t * net, bool update_fspm)
+{
+   pf_snmp_system_contact_t syscontact = {0};
+   pf_snmp_system_name_t sysname = {0};
+   pf_snmp_system_location_t syslocation = {0};
+
+   LOG_DEBUG (PF_SNMP_LOG, "SNMP(%d): Resetting SNMP data.\n", __LINE__);
+   pf_snmp_set_system_contact (net, &syscontact);
+   pf_snmp_set_system_name (net, &sysname);
+   pf_snmp_set_system_location (net, &syslocation, update_fspm);
 }
 
 void pf_snmp_fspm_im_location_ind (pnet_t * net)
 {
-   const char * p_file_directory = pf_cmina_get_file_directory (net);
    pf_snmp_data_t * snmp = &net->snmp_data;
+   pf_snmp_system_location_t system_location;
 
    /* Location data is stored in two different files: the file with
     * I&M data and a file used by SNMP containing a larger version
     * of the device's location. The larger version has precedence
     * over the I&M version, so we need to delete the larger one */
-   pf_file_clear (p_file_directory, PF_FILENAME_SNMP_SYSLOCATION);
+   pf_bg_worker_start_job (net, PF_BGJOB_CLEAR_SNMP_SYSTEM_LOCATION_NVM_DATA);
 
    /* Use "IM_Tag_Location" from I&M1 */
-   pf_fspm_get_im_location (net, snmp->system_location.string);
-   snmp->system_location.string[sizeof (snmp->system_location.string) - 1] =
-      '\0';
+   pf_fspm_get_im_location (net, system_location.string);
+   system_location.string[sizeof (system_location.string) - 1] = '\0';
+
+   os_mutex_lock (net->snmp_mutex);
+   snmp->system_location = system_location;
+   os_mutex_unlock (net->snmp_mutex);
 
    LOG_DEBUG (
       PF_SNMP_LOG,
@@ -352,41 +373,57 @@ void pf_snmp_get_system_name (pnet_t * net, pf_snmp_system_name_t * name)
 {
    const pf_snmp_data_t * snmp = &net->snmp_data;
 
+   os_mutex_lock (net->snmp_mutex);
    snprintf (
       name->string,
       sizeof (name->string),
       "%s",
       snmp->system_name.string);
+   os_mutex_unlock (net->snmp_mutex);
 }
 
 int pf_snmp_set_system_name (pnet_t * net, const pf_snmp_system_name_t * name)
 {
-   const char * directory = pf_cmina_get_file_directory (net);
    pf_snmp_data_t * snmp = &net->snmp_data;
-   pf_snmp_system_name_t temporary_buffer;
-   int res;
 
    /* Ideally, we should set the Fully Qualified Domain Name here. However, not
     * all systems are expected to support doing that, so we don't.
     * Instead, we just save the sysName to file as to ensure it is persistent
     * across restarts.
     */
-
-   snprintf (
+   os_mutex_lock (net->snmp_mutex);
+   memcpy (
       snmp->system_name.string,
-      sizeof (snmp->system_name.string),
-      "%s",
-      name->string);
+      name->string,
+      sizeof (snmp->system_name.string) - 1);
+   snmp->system_name.string[sizeof (snmp->system_name.string) - 1] = '\0';
+   os_mutex_unlock (net->snmp_mutex);
+
+   pf_bg_worker_start_job (net, PF_BGJOB_SAVE_SNMP_SYSTEM_NAME_NVM_DATA);
+
+   return 0;
+}
+
+void pf_snmp_save_system_name (pnet_t * net)
+{
+   int res;
+   pf_snmp_system_name_t temporary_buffer;
+   pf_snmp_system_name_t system_name;
+   pf_snmp_data_t * snmp = &net->snmp_data;
+   const char * directory = pf_cmina_get_file_directory (net);
+
+   os_mutex_lock (net->snmp_mutex);
+   system_name = snmp->system_name;
+   os_mutex_unlock (net->snmp_mutex);
 
    res = pf_file_save_if_modified (
       directory,
       PF_FILENAME_SNMP_SYSNAME,
-      name,
+      &system_name,
       &temporary_buffer,
-      sizeof (*name));
-   pf_snmp_log_saved_variable (res, "sysName", name->string);
+      sizeof (system_name));
 
-   return res == -1 ? -1 : 0;
+   pf_snmp_log_saved_variable (res, "sysName", system_name.string);
 }
 
 void pf_snmp_get_system_contact (
@@ -394,38 +431,54 @@ void pf_snmp_get_system_contact (
    pf_snmp_system_contact_t * contact)
 {
    const pf_snmp_data_t * snmp = &net->snmp_data;
-
+   os_mutex_lock (net->snmp_mutex);
    snprintf (
       contact->string,
       sizeof (contact->string),
       "%s",
       snmp->system_contact.string);
+   os_mutex_unlock (net->snmp_mutex);
 }
 
 int pf_snmp_set_system_contact (
    pnet_t * net,
    const pf_snmp_system_contact_t * contact)
 {
-   const char * directory = pf_cmina_get_file_directory (net);
    pf_snmp_data_t * snmp = &net->snmp_data;
-   pf_snmp_system_contact_t temporary_buffer;
-   int res;
 
+   os_mutex_lock (net->snmp_mutex);
    snprintf (
       snmp->system_contact.string,
       sizeof (snmp->system_contact.string),
       "%s",
       contact->string);
+   os_mutex_unlock (net->snmp_mutex);
+
+   pf_bg_worker_start_job (net, PF_BGJOB_SAVE_SNMP_SYSTEM_CONTACT_NVM_DATA);
+
+   return 0;
+}
+
+void pf_snmp_save_system_contact (pnet_t * net)
+{
+   int res;
+   pf_snmp_system_contact_t temporary_buffer;
+   pf_snmp_system_contact_t system_contact;
+   pf_snmp_data_t * snmp = &net->snmp_data;
+   const char * directory = pf_cmina_get_file_directory (net);
+
+   os_mutex_lock (net->snmp_mutex);
+   system_contact = snmp->system_contact;
+   os_mutex_unlock (net->snmp_mutex);
 
    res = pf_file_save_if_modified (
       directory,
       PF_FILENAME_SNMP_SYSCONTACT,
-      contact,
+      &system_contact,
       &temporary_buffer,
-      sizeof (*contact));
-   pf_snmp_log_saved_variable (res, "sysContact", contact->string);
+      sizeof (system_contact));
 
-   return res == -1 ? -1 : 0;
+   pf_snmp_log_saved_variable (res, "sysContact", system_contact.string);
 }
 
 void pf_snmp_get_system_location (
@@ -434,40 +487,61 @@ void pf_snmp_get_system_location (
 {
    const pf_snmp_data_t * snmp = &net->snmp_data;
 
+   os_mutex_lock (net->snmp_mutex);
    snprintf (
       location->string,
       sizeof (location->string),
       "%s",
       snmp->system_location.string);
+   os_mutex_unlock (net->snmp_mutex);
 }
 
 int pf_snmp_set_system_location (
    pnet_t * net,
-   const pf_snmp_system_location_t * location)
+   const pf_snmp_system_location_t * location,
+   bool update_im)
 {
-   const char * directory = pf_cmina_get_file_directory (net);
    pf_snmp_data_t * snmp = &net->snmp_data;
-   pf_snmp_system_location_t temporary_buffer;
-   int res;
 
+   os_mutex_lock (net->snmp_mutex);
    snprintf (
       snmp->system_location.string,
       sizeof (snmp->system_location.string),
       "%s",
       location->string);
+   os_mutex_unlock (net->snmp_mutex);
+
+   pf_bg_worker_start_job (net, PF_BGJOB_SAVE_SNMP_SYSTEM_LOCATION_NVM_DATA);
+
+   /* Update 22 byte "IM_Tag_Location" in I&M1 */
+   if (update_im)
+   {
+      pf_fspm_save_im_location (net, location->string);
+   }
+
+   return 0;
+}
+
+void pf_snmp_save_system_location (pnet_t * net)
+{
+   int res;
+   pf_snmp_system_location_t temporary_buffer;
+   pf_snmp_system_location_t system_location;
+   pf_snmp_data_t * snmp = &net->snmp_data;
+   const char * directory = pf_cmina_get_file_directory (net);
+
+   os_mutex_lock (net->snmp_mutex);
+   system_location = snmp->system_location;
+   os_mutex_unlock (net->snmp_mutex);
 
    res = pf_file_save_if_modified (
       directory,
       PF_FILENAME_SNMP_SYSLOCATION,
-      location,
+      &system_location,
       &temporary_buffer,
-      sizeof (*location));
-   pf_snmp_log_saved_variable (res, "sysLocation", location->string);
+      sizeof (system_location));
 
-   /* Update 22 byte "IM_Tag_Location" in I&M1 */
-   pf_fspm_save_im_location (net, location->string);
-
-   return res == -1 ? -1 : 0;
+   pf_snmp_log_saved_variable (res, "sysLocation", system_location.string);
 }
 
 void pf_snmp_get_system_description (

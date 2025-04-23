@@ -1214,7 +1214,7 @@ static int pf_alarm_apms_a_data_ind (
  * @param payload_usi      In:    The payload USI. Only used for
  *                                block type = alarm notify.
  *                                Use 0 for no payload.
- * @param payload_len      In:    Number of bytes of manufaturer data.
+ * @param payload_len      In:    Number of bytes of manufacturer data.
  *                                Only used for manufacturer data ("USI format",
  *                                payload USI <= 0x7FFF).
  *                                May be 0 for manufacturer data.
@@ -3087,7 +3087,7 @@ int pf_alarm_alpmr_alarm_ack (
  * @param payload_usi      In:    The payload USI. Only used for
  *                                block type = alarm notify.
  *                                Use 0 for no payload (not even the USI value).
- * @param payload_len      In:    Number of bytes of manufaturer data,
+ * @param payload_len      In:    Number of bytes of manufacturer data,
  *                                or sizeof(pf_diag_item_t) for diagnosis in
  *                                standard format.
  *                                May be 0 also for manufacturer data.

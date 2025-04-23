@@ -789,7 +789,11 @@ typedef struct pf_ndr_array
 
 typedef struct pf_ndr_data
 {
-   uint32_t args_maximum;
+   union
+   {
+      uint32_t args_maximum; /* Request */
+      uint32_t pnio_status;  /* Response */
+   };
    uint32_t args_length;
    pf_ndr_array_t array;
 } pf_ndr_data_t;
@@ -904,7 +908,7 @@ typedef enum pf_alarm_type_values
    /* Reserved 0x0017..0x001d */
    PF_ALARM_TYPE_UPLOAD_AND_RETRIVAL = 0x001e,
    PF_ALARM_TYPE_PULL_MODULE = 0x001f,
-   /* Manufaturer specific 0x0020..0x007f */
+   /* Manufacturer specific 0x0020..0x007f */
    /* Reserved for profiles 0x0080..0x00ff */
    /* Reserved 0x0100.. 0xffff */
 } pf_alarm_type_values_t;
@@ -1370,7 +1374,7 @@ typedef enum pf_ident_info
 typedef enum pf_cmdev_state_values
 {
    PF_CMDEV_STATE_POWER_ON = 0, /* Data initialization. (Must be first) */
-   PF_CMDEV_STATE_W_CIND,       /* Wait for connect indcation. */
+   PF_CMDEV_STATE_W_CIND,       /* Wait for connect indication. */
    PF_CMDEV_STATE_W_CRES,       /* Wait for connect response from app and CMSU
                                    startup. */
    PF_CMDEV_STATE_W_SUCNF,      /* Wait for CMSU confirmation. */
@@ -3078,6 +3082,8 @@ struct pnet
    pf_drv_t * hwo_drv;
 
 #if PNET_OPTION_SNMP
+   /** Mutex for snmp_data */
+   os_mutex_t * snmp_mutex;
    pf_snmp_data_t snmp_data;
 #endif
 };

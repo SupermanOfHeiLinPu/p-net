@@ -360,6 +360,28 @@ extern "C" {
  */
 #define PNET_ERROR_CODE_2_DCTRL_FAULTY_CONNECT_CONTROLCOMMAND 0x08
 
+/**
+ * # List of error_code_2 values, for
+ * PNET_ERROR_CODE_1_CONN_FAULTY_IR_INFO (not exhaustive).
+ * PN-AL-Protocol (Mar24): 5.8.2.12 (Table 1322)
+ */
+#define PNET_ERROR_CODE_2_FAULTY_IR_INFO_WRONG_UUID      0x05
+#define PNET_ERROR_CODE_2_FAULTY_IR_INFO_WRONG_NBR_IOCRS 0x07
+
+/**
+ * # List of error_code_2 values, for
+ * PNET_ERROR_CODE_1_CONN_FAULTY_MCR_BLOCK_REQ (not exhaustive).
+ * PN-AL-Protocol (Mar24): 5.8.2.9 (Table 1320)
+ */
+#define PNET_ERROR_CODE_2_FAULTY_MCR_BLOCK_REQ_WRONG_NAME_LENGTH 0x07
+
+/**
+ * # List of error_code_2 values, for
+ * PNET_ERROR_CODE_1_CONN_FAULTY_PRM_SERVER_BLOCK_REQ (not exhaustive).
+ * PN-AL-Protocol (Mar24): 5.8.2.8 (Table 1319)
+ */
+#define PNET_ERROR_CODE_2_FAULTY_PRM_SERVER_BLOCK_REQ_WRONG_NAME_LENGTH 0x07
+
 /******************************** Events ******************************/
 
 /**

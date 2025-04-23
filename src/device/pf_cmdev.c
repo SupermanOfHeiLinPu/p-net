@@ -2121,7 +2121,7 @@ static int pf_cmdev_iocr_setup_iocs (
             }
             if (iy < iodata_cnt)
             {
-               /* Re-use any pre-existing data + iops descriptor */
+               /* Reuse any pre-existing data + iops descriptor */
                p_iodata = &p_iocr->data_desc[iy];
             }
             else
@@ -2203,8 +2203,6 @@ static int pf_cmdev_iocr_setup_data_iops (
    uint16_t iodata_cnt = 0;
    uint16_t in_len = 0;
    uint16_t out_len = 0;
-   uint16_t in_user_len = 0;
-   uint16_t out_user_len = 0;
 
    in_len = p_iocr->in_length;
    out_len = p_iocr->out_length;
@@ -2282,7 +2280,7 @@ static int pf_cmdev_iocr_setup_data_iops (
             }
             if (iy < iodata_cnt)
             {
-               /* Re-use existing data+iops descriptor */
+               /* Reuse existing data+iops descriptor */
                p_iodata = &p_iocr->data_desc[iy];
             }
             else
@@ -2338,15 +2336,11 @@ static int pf_cmdev_iocr_setup_data_iops (
             {
                in_len += p_iodata->data_length + p_iodata->iops_length +
                          p_iodata->iocs_length;
-               in_user_len += p_iodata->data_length + p_iodata->iops_length +
-                              p_iodata->iocs_length;
             }
             else if (dir == PF_DIRECTION_OUTPUT)
             {
                out_len += p_iodata->data_length + p_iodata->iops_length +
                           p_iodata->iocs_length;
-               out_user_len += p_iodata->data_length + p_iodata->iops_length +
-                               p_iodata->iocs_length;
             }
          }
       }
@@ -2992,17 +2986,7 @@ static int pf_cmdev_check_iocr_apis (pf_ar_t * p_ar, pnet_result_t * p_stat)
    return ret;
 }
 
-/**
- * @internal
- * Check the IOCR param of an AR for errors.
- * @param net              InOut: The p-net stack instance
- * @param p_ar             InOut: The AR instance.
- * @param p_stat           Out:   Detailed error information if return != 0.
- * @return  0  if no error was found
- *          -1 if an error was found.
- */
-static int pf_cmdev_check_iocr_param (
-   pnet_t * net,
+int pf_cmdev_check_iocr_param (
    pf_ar_t * p_ar,
    pnet_result_t * p_stat)
 {
@@ -3111,7 +3095,10 @@ static int pf_cmdev_check_iocr_param (
       else if (
          ((p_iocr->iocr_properties.rt_class == PF_RT_CLASS_UDP) &&
           ((p_iocr->c_sdu_length < 12) || (p_iocr->c_sdu_length > 1440))) ||
-         ((p_iocr->iocr_properties.rt_class == PF_RT_CLASS_1) &&
+         ((p_iocr->iocr_properties.rt_class == PF_RT_CLASS_1 ||
+           p_iocr->iocr_properties.rt_class == PF_RT_CLASS_2 ||
+           p_iocr->iocr_properties.rt_class == PF_RT_CLASS_3 ||
+           p_iocr->iocr_properties.rt_class == PF_RT_CLASS_STREAM) &&
           ((p_iocr->c_sdu_length < 40) || (p_iocr->c_sdu_length > 1440))))
       {
          pf_set_error (
@@ -3194,9 +3181,7 @@ static int pf_cmdev_check_iocr_param (
           ((p_iocr->reduction_ratio >= 256) &&
            (p_iocr->send_clock_factor > 64)) ||
           ((p_iocr->reduction_ratio == 512) &&
-           (p_iocr->send_clock_factor > 32)) ||
-          (pf_fspm_get_min_device_interval (net) >
-           p_iocr->send_clock_factor * p_iocr->reduction_ratio)))
+           (p_iocr->send_clock_factor > 32))))
       {
          pf_set_error (
             p_stat,
@@ -3348,6 +3333,48 @@ static int pf_cmdev_check_iocr_param (
       else
       {
          p_iocr->valid = true;
+      }
+   }
+
+   return ret;
+}
+
+/**
+ * @internal
+ * Check the IOCR param of an AR for errors, including an additional
+ * reduction ratio check.
+ * @param net              InOut: The p-net stack instance
+ * @param p_ar             InOut: The AR instance.
+ * @param p_stat           Out:   Detailed error information if return != 0.
+ * @return  0  if no error was found.
+ *          -1 if an error was found.
+ */
+static int pf_cmdev_check_iocr_param_full (
+   pnet_t * net,
+   pf_ar_t * p_ar,
+   pnet_result_t * p_stat)
+{
+   pf_iocr_param_t * p_iocr;
+   uint16_t ix;
+   int ret;
+
+   ret = pf_cmdev_check_iocr_param (p_ar, p_stat);
+   if (ret == 0)
+   {
+      for (ix = 0; ix < p_ar->nbr_iocrs; ix++)
+      {
+         p_iocr = &p_ar->iocrs[ix].param;
+         if (pf_fspm_get_min_device_interval (net) >
+               p_iocr->send_clock_factor * p_iocr->reduction_ratio)
+         {
+            pf_set_error (
+                  p_stat,
+                  PNET_ERROR_CODE_CONNECT,
+                  PNET_ERROR_DECODE_PNIO,
+                  PNET_ERROR_CODE_1_CONN_FAULTY_IOCR_BLOCK_REQ,
+                  11);
+            ret = -1;
+         }
       }
    }
 
@@ -4168,7 +4195,7 @@ static int pf_cmdev_check_apdu (
 
       if (ret == 0)
       {
-         ret = pf_cmdev_check_iocr_param (net, p_ar, p_stat);
+         ret = pf_cmdev_check_iocr_param_full (net, p_ar, p_stat);
       }
 
       if (ret == 0)

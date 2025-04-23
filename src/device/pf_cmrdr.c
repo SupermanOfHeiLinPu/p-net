@@ -140,11 +140,17 @@ int pf_cmrdr_rm_read_ind (
    start_pos = *p_pos;
    if (p_read_request->index <= PF_IDX_USER_MAX)
    {
-      /* Provided by application - accept whatever it says. */
       if (*p_pos + data_len <= res_size)
       {
-         memcpy (&p_res[*p_pos], p_data, data_len);
-         *p_pos += data_len;
+
+         if (data_len > 0 && p_data != NULL)
+         {
+            /* Provided by application - accept whatever it says. */
+            memcpy (&p_res[*p_pos], p_data, data_len);
+            *p_pos += data_len;
+         }
+
+         /* Handled, even if no bytes were actually copied */
          ret = 0;
       }
    }

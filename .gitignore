@@ -4,8 +4,8 @@ build*/
 CMakeFiles/
 CMakeCache.txt
 install
-doc/_build
-doc/_copied
+docs/_build
+docs/_copied
 
 .cproject
 .project

@@ -1288,41 +1288,15 @@ static int pf_cmrpc_rm_connect_interpret_ind (
             }
             break;
          case PF_BT_IOCR_BLOCK_REQ:
-            if (!(p_ar->nbr_iocrs < PNET_MAX_CR))
-            {
-               LOG_ERROR (
-                  PF_RPC_LOG,
-                  "CMRPC(%d): Too many CR given. Max %u CR per AR supported\n",
-                  __LINE__,
-                  PNET_MAX_CR);
-               pf_set_error (
-                  &p_sess->rpc_result,
-                  PNET_ERROR_CODE_CONNECT,
-                  PNET_ERROR_DECODE_PNIO,
-                  PNET_ERROR_CODE_1_CMRPC,
-                  PNET_ERROR_CODE_2_CMRPC_WRONG_BLOCK_COUNT);
-               ret = -1;
-            }
-            else if (
+            if (
                pf_get_iocr_param (
                   &p_sess->get_info,
                   p_pos,
                   p_ar->nbr_iocrs,
-                  p_ar) != 0)
+                  p_ar,
+                  &p_sess->rpc_result) != 0)
             {
-               LOG_ERROR (
-                  PF_RPC_LOG,
-                  "CMRPC(%d): Too many CR resources requested."
-                  " Check that the controller (PLC) does not request more"
-                  " modules or submodules than P-Net has been configured"
-                  " to support.\n",
-                  __LINE__);
-               pf_set_error (
-                  &p_sess->rpc_result,
-                  PNET_ERROR_CODE_CONNECT,
-                  PNET_ERROR_DECODE_PNIO,
-                  PNET_ERROR_CODE_1_CMRPC,
-                  PNET_ERROR_CODE_2_CMRPC_OUT_OF_PCA_RESOURCES);
+               /* Error already set */
                ret = -1;
             }
             else
@@ -1528,8 +1502,17 @@ static int pf_cmrpc_rm_connect_interpret_ind (
 #if PNET_OPTION_PARAMETER_SERVER
          case PF_BT_PRM_SERVER_REQ:
             pf_get_ar_prm_server_request (&p_sess->get_info, p_pos, p_ar);
-
-            if (p_ar->ar_param.ar_properties.device_access == true)
+            if (p_sess->get_info.result != PF_PARSE_OK)
+            {
+               pf_set_error (
+                  &p_sess->rpc_result,
+                  PNET_ERROR_CODE_CONNECT,
+                  PNET_ERROR_DECODE_PNIO,
+                  PNET_ERROR_CODE_1_CONN_FAULTY_PRM_SERVER_BLOCK_REQ,
+                  PNET_ERROR_CODE_2_FAULTY_PRM_SERVER_BLOCK_REQ_WRONG_NAME_LENGTH);
+               ret = -1;
+            }
+            else if (p_ar->ar_param.ar_properties.device_access == true)
             {
                pf_set_error (
                   &p_sess->rpc_result,
@@ -1556,7 +1539,17 @@ static int pf_cmrpc_rm_connect_interpret_ind (
 #if PNET_OPTION_MC_CR
          case PF_BT_MCR_REQ:
             pf_get_mcr_request (&p_sess->get_info, p_pos, p_ar->nbr_mcr, p_ar);
-            if (p_ar->ar_param.ar_properties.device_access == true)
+            if (p_sess->get_info.result != PF_PARSE_OK)
+            {
+               pf_set_error (
+                  &p_sess->rpc_result,
+                  PNET_ERROR_CODE_CONNECT,
+                  PNET_ERROR_DECODE_PNIO,
+                  PNET_ERROR_CODE_1_CONN_FAULTY_MCR_BLOCK_REQ,
+                  PNET_ERROR_CODE_2_FAULTY_MCR_BLOCK_REQ_WRONG_NAME_LENGTH);
+               ret = -1;
+            }
+            else if (p_ar->ar_param.ar_properties.device_access == true)
             {
                pf_set_error (
                   &p_sess->rpc_result,
@@ -1631,7 +1624,7 @@ static int pf_cmrpc_rm_connect_interpret_ind (
                   &block_header,
                   PNET_ERROR_CODE_1_CONN_FAULTY_FAULTY_RECORD,
                   &p_sess->rpc_result);
-               if (ret == 0)
+               if (ret == 0 && p_ar->nbr_ar_vendor < PNET_MAX_AR_VENDOR_BLOCKS)
                {
                   p_ar->nbr_ar_vendor++;
                }
@@ -1640,7 +1633,18 @@ static int pf_cmrpc_rm_connect_interpret_ind (
 #endif
 #if PNET_OPTION_IR
          case PF_BT_IR_INFO_BLOCK_REQ:
-            pf_get_ir_info_request (&p_sess->get_info, p_pos, p_ar);
+            ret = pf_get_ir_info_request (&p_sess->get_info, p_pos, p_ar);
+            if (ret != 0)
+            {
+               pf_set_error (
+                  &p_sess->rpc_result,
+                  PNET_ERROR_CODE_CONNECT,
+                  PNET_ERROR_DECODE_PNIO,
+                  PNET_ERROR_CODE_1_CONN_FAULTY_IR_INFO,
+                  ret);
+               ret = -1;
+               break;
+            }
 
             if (p_ar->ar_param.ar_properties.device_access == true)
             {
@@ -2972,6 +2976,20 @@ static int pf_cmrpc_rm_read_ind (
             PNET_ERROR_CODE_1_ACC_INVALID_AREA_API,
             6);
       }
+      else if ((p_ar == NULL) && (opnum != PF_RPC_DEV_OPNUM_READ_IMPLICIT))
+      {
+         LOG_ERROR (
+            PF_RPC_LOG,
+            "CMRPC(%d): RPC non-implicit read received without connection\n",
+            __LINE__);
+         pf_set_error (
+            &p_sess->rpc_result,
+            PNET_ERROR_CODE_READ,
+            PNET_ERROR_DECODE_PNIO,
+            PNET_ERROR_CODE_1_CMRPC,
+            PNET_ERROR_CODE_2_CMRPC_IOCR_MISSING);
+         p_sess->kill_session = true;
+      }
       else
       {
          /* Note that for "read implicit" we have no AR */
@@ -4285,7 +4303,7 @@ static int pf_cmrpc_rpc_response (
  * @return  0  if operation succeeded.  (Typically not used by the caller)
  *          -1 if an error occurred.
  */
-static int pf_cmrpc_dce_packet (
+int pf_cmrpc_dce_packet (
    pnet_t * net,
    uint32_t ip_addr,
    uint16_t port,
@@ -4458,6 +4476,20 @@ static int pf_cmrpc_dce_packet (
                PNET_ERROR_CODE_1_CMRPC,
                PNET_ERROR_CODE_2_CMRPC_STATE_CONFLICT);
          }
+         else if (req_len < req_pos + rpc_req.length_of_body)
+         {
+            LOG_ERROR (
+               PF_RPC_LOG,
+               "CMRPC(%d): Parsed invalid body length in incoming RPC message."
+               " The parsed body length exceeds the size of the message.\n",
+               __LINE__);
+            pf_set_error (
+               &p_sess->rpc_result,
+               PNET_ERROR_CODE_CONNECT,
+               PNET_ERROR_DECODE_PNIO,
+               PNET_ERROR_CODE_1_CMRPC,
+               PNET_ERROR_CODE_2_CMRPC_STATE_CONFLICT);
+         }
          else
          {
             /* Copy to session input buffer */
@@ -4587,7 +4619,19 @@ static int pf_cmrpc_dce_packet (
                   &uuid_epmap_interface,
                   sizeof (rpc_req.object_uuid)) != 0)
             {
-               pf_get_ndr_data (&p_sess->get_info, &req_pos, &p_sess->ndr_data);
+               if (
+                  pf_get_ndr_data_req (
+                     &p_sess->get_info,
+                     &req_pos,
+                     &p_sess->ndr_data) != 0)
+               {
+                  LOG_ERROR (
+                     PF_RPC_LOG,
+                     "CMRPC(%d): Invalid NDR header.\n",
+                     __LINE__);
+                  ret = -1;
+                  break;
+               }
                /* From now on all is big-endian */
                p_sess->get_info.is_big_endian = true;
 
@@ -4954,13 +4998,46 @@ static int pf_cmrpc_dce_packet (
                res_pos = 0; /* Send nothing in response */
                ret = 0;
             }
+            else if (p_sess->p_ar == NULL)
+            {
+               LOG_ERROR (
+                  PF_RPC_LOG,
+                  "CMRPC(%d): Parent AR set to NULL. "
+                  "Aborting.\n",
+                  __LINE__);
+               p_sess->kill_session = true;
+               res_pos = 0; /* Send nothing in response */
+               ret = 0;
+            }
             else
             {
-               pf_get_ndr_data (&p_sess->get_info, &req_pos, &p_sess->ndr_data);
-               p_sess->get_info.is_big_endian = true; /* From now on all is
-                                                         big-endian */
+               if (
+                  pf_get_ndr_data_rsp (
+                     &p_sess->get_info,
+                     &req_pos,
+                     &p_sess->ndr_data) != 0)
+               {
+                  LOG_ERROR (
+                     PF_RPC_LOG,
+                     "CMRPC(%d): Invalid NDR header.\n",
+                     __LINE__);
+                  ret = -1;
+               }
+               else
+               {
+                  if (p_sess->ndr_data.pnio_status != 0)
+                  {
+                     LOG_WARNING (
+                        PF_RPC_LOG,
+                        "CMRPC(%d): NDR status %" PRIu32 ".\n",
+                        __LINE__,
+                        p_sess->ndr_data.pnio_status);
+                  }
 
-               ret = pf_cmrpc_rpc_response (net, p_sess, req_pos, &rpc_req);
+                  p_sess->get_info.is_big_endian = true; /* From now on all is
+                                                            big-endian */
+                  ret = pf_cmrpc_rpc_response (net, p_sess, req_pos, &rpc_req);
+               }
             }
             break;
          case PF_RPC_PT_CL_CANCEL:

@@ -428,7 +428,7 @@ int pf_diag_add (
          }
          else
          {
-            /* Re-use the old entry */
+            /* Reuse the old entry */
             (void)pf_cmdev_get_diag_item (net, item_ix, &p_item);
             overwrite = true;
          }

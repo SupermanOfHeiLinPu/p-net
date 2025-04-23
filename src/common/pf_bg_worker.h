@@ -36,6 +36,19 @@ typedef enum pf_bg_job
 
    /** Save non volatile PDPort data to file */
    PF_BGJOB_SAVE_PDPORT_NVM_DATA,
+
+   /** Save non volatile SNMP data to file */
+   PF_BGJOB_SAVE_SNMP_SYSTEM_CONTACT_NVM_DATA,
+   PF_BGJOB_SAVE_SNMP_SYSTEM_NAME_NVM_DATA,
+   PF_BGJOB_SAVE_SNMP_SYSTEM_LOCATION_NVM_DATA,
+   PF_BGJOB_CLEAR_SNMP_SYSTEM_LOCATION_NVM_DATA,
+
+   /** Clear ip setting file  */
+   PF_BGJOB_CLEAR_IP_SETTINGS_FILE,
+
+   /** Clear diagnostics file  */
+   PF_BGJOB_CLEAR_DIAGNOSTICS_FILE,
+
 } pf_bg_job_t;
 
 /**

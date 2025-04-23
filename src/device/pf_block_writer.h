@@ -538,7 +538,7 @@ void pf_put_alarm_fixed (
  * @param payload_usi      In:    The payload USI (may be 0). Only used for
  *                                block type = alarm notify.
  *                                Use 0 for no payload.
- * @param payload_len      In:    Number of bytes of manufaturer data.
+ * @param payload_len      In:    Number of bytes of manufacturer data.
  *                                Only used for manufacturer data
  *                                (payload USI <= 0x7FFF).
  *                                May be 0 for manufacturer data.

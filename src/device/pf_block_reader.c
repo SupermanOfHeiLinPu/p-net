@@ -397,11 +397,29 @@ int pf_get_iocr_param (
    pf_get_info_t * p_info,
    uint16_t * p_pos,
    uint16_t ix,
-   pf_ar_t * p_ar)
+   pf_ar_t * p_ar,
+   pnet_result_t * p_result)
 {
    uint32_t temp_u32;
    uint16_t temp_u16;
    uint16_t iy;
+   bool too_many_resources_requested = false;
+
+   if (!(p_ar->nbr_iocrs < PNET_MAX_CR))
+   {
+      LOG_ERROR (
+         PF_RPC_LOG,
+         "CMRPC(%d): Too many CR given. Max %u CR per AR supported\n",
+         __LINE__,
+         PNET_MAX_CR);
+      pf_set_error (
+         p_result,
+         PNET_ERROR_CODE_CONNECT,
+         PNET_ERROR_DECODE_PNIO,
+         PNET_ERROR_CODE_1_CMRPC,
+         PNET_ERROR_CODE_2_CMRPC_WRONG_BLOCK_COUNT);
+      return -1;
+   }
 
    p_ar->iocrs[ix].param.iocr_type = pf_get_uint16 (p_info, p_pos);
    p_ar->iocrs[ix].param.iocr_reference = pf_get_uint16 (p_info, p_pos);
@@ -440,21 +458,49 @@ int pf_get_iocr_param (
       &p_ar->iocrs[ix].param.iocr_multicast_mac_add);
 
    p_ar->iocrs[ix].param.nbr_apis = pf_get_uint16 (p_info, p_pos);
-   if (p_ar->iocrs[ix].param.nbr_apis > PNET_MAX_API)
+
+   if (pf_cmdev_check_iocr_param (p_ar, p_result) != 0)
    {
+      /* Error already set */
       return -1;
    }
-   for (iy = 0; iy < p_ar->iocrs[ix].param.nbr_apis; iy++)
+
+   if (p_ar->iocrs[ix].param.nbr_apis > PNET_MAX_API)
    {
-      if (
-         pf_get_iocr_api_entry (
-            p_info,
-            p_pos,
-            &p_ar->iocrs[ix].param.apis[iy]) != 0)
+      too_many_resources_requested = true;
+   }
+   if (!too_many_resources_requested)
+   {
+      for (iy = 0; iy < p_ar->iocrs[ix].param.nbr_apis; iy++)
       {
-         return -1;
+         if (
+            pf_get_iocr_api_entry (
+               p_info,
+               p_pos,
+               &p_ar->iocrs[ix].param.apis[iy]) != 0)
+         {
+            too_many_resources_requested = true;
+         }
       }
    }
+   if (too_many_resources_requested)
+   {
+      LOG_ERROR (
+         PF_RPC_LOG,
+         "CMRPC(%d): Too many CR resources requested."
+         " Check that the controller (PLC) does not request more"
+         " modules or submodules than P-Net has been configured"
+         " to support.\n",
+         __LINE__);
+      pf_set_error (
+         p_result,
+         PNET_ERROR_CODE_CONNECT,
+         PNET_ERROR_DECODE_PNIO,
+         PNET_ERROR_CODE_1_CMRPC,
+         PNET_ERROR_CODE_2_CMRPC_OUT_OF_PCA_RESOURCES);
+      return -1;
+   }
+
    return 0;
 }
 
@@ -536,11 +582,23 @@ void pf_get_exp_api_module (
                module->ident_number,
                module->nbr_submodules);
 
-            for (iy = 0; iy < module->nbr_submodules; iy++)
+            if (module->nbr_submodules <= PNET_MAX_SUBSLOTS)
             {
-               pf_get_exp_submodule (p_info, p_pos, &module->submodule[iy]);
+               for (iy = 0; iy < module->nbr_submodules; iy++)
+               {
+                  pf_get_exp_submodule (p_info, p_pos, &module->submodule[iy]);
+               }
+               api->valid = true;
             }
-            api->valid = true;
+            else
+            {
+               p_info->result = PF_PARSE_OUT_OF_EXP_SUBMODULE_RESOURCES;
+               LOG_ERROR (
+                  PNET_LOG,
+                  "BR(%d): Too many submodules used (not enough subslots). "
+                  "Out of expected submodule resources.\n",
+                  __LINE__);
+            }
          }
          else
          {
@@ -605,13 +663,23 @@ void pf_get_ar_prm_server_request (
       pf_get_uint16 (p_info, p_pos);
    p_ar->prm_server.parameter_server_station_name_len =
       pf_get_uint16 (p_info, p_pos);
-   pf_get_mem (
-      p_info,
-      p_pos,
-      p_ar->prm_server.parameter_server_station_name_len,
-      p_ar->prm_server.parameter_server_station_name);
-   p_ar->prm_server.parameter_server_station_name
-      [p_ar->prm_server.parameter_server_station_name_len] = '\0';
+   if (
+      p_ar->prm_server.parameter_server_station_name_len >=
+      sizeof (p_ar->prm_server.parameter_server_station_name))
+   {
+      p_info->result = PF_PARSE_ERROR;
+   }
+   else
+   {
+      pf_get_mem (
+         p_info,
+         p_pos,
+         p_ar->prm_server.parameter_server_station_name_len,
+         p_ar->prm_server.parameter_server_station_name);
+      p_ar->prm_server.parameter_server_station_name
+         [p_ar->prm_server.parameter_server_station_name_len] = '\0';
+      p_info->result = PF_PARSE_OK;
+   }
 }
 #endif
 
@@ -634,20 +702,47 @@ static void pf_get_dfp_iocr (
    p_dfp_iocr->subframe_data.subframe_length = pf_get_byte (p_info, p_pos);
 }
 
-void pf_get_ir_info_request (
+uint8_t pf_get_ir_info_request (
    pf_get_info_t * p_info,
    uint16_t * p_pos,
    pf_ar_t * p_ar)
 {
    uint16_t ix;
+   bool data4_is_zero = true;
 
    pf_get_uuid (p_info, p_pos, &p_ar->ir_info.ir_data_uuid);
    p_ar->ir_info.nbr_iocrs = pf_get_uint16 (p_info, p_pos);
+
+   for (ix = 0; ix < sizeof (p_ar->ir_info.ir_data_uuid.data4); ix++)
+   {
+      if (p_ar->ir_info.ir_data_uuid.data4[ix] != 0)
+      {
+         data4_is_zero = false;
+         break;
+      }
+   }
+
+   /* PN-AL-Protocol (Mar24) Table 1322 states the UUID should not be zero */
+   if (
+      p_ar->ir_info.ir_data_uuid.data1 == 0 &&
+      p_ar->ir_info.ir_data_uuid.data2 == 0 &&
+      p_ar->ir_info.ir_data_uuid.data3 == 0 &&
+      data4_is_zero)
+   {
+      return PNET_ERROR_CODE_2_FAULTY_IR_INFO_WRONG_UUID;
+   }
+
+   if (p_ar->ir_info.nbr_iocrs > PNET_MAX_DFP_IOCR)
+   {
+      return PNET_ERROR_CODE_2_FAULTY_IR_INFO_WRONG_NBR_IOCRS;
+   }
 
    for (ix = 0; ix < p_ar->ir_info.nbr_iocrs; ix++)
    {
       pf_get_dfp_iocr (p_info, p_pos, &p_ar->ir_info.dfp_iocrs[ix]);
    }
+
+   return 0;
 }
 #endif
 
@@ -667,14 +762,23 @@ void pf_get_mcr_request (
    p_ar->mcr_request[ix].length_provider_station_name =
       pf_get_uint16 (p_info, p_pos);
 
-   pf_get_mem (
-      p_info,
-      p_pos,
-      p_ar->mcr_request[ix].length_provider_station_name,
-      p_ar->mcr_request[ix].provider_station_name);
-   p_ar->mcr_request[ix]
-      .provider_station_name[p_ar->mcr_request[ix].length_provider_station_name] =
-      '\0';
+   if (
+      p_ar->mcr_request[ix].length_provider_station_name >=
+      sizeof (p_ar->mcr_request[ix].provider_station_name))
+   {
+      p_info->result = PF_PARSE_ERROR;
+   }
+   else
+   {
+      pf_get_mem (
+         p_info,
+         p_pos,
+         p_ar->mcr_request[ix].length_provider_station_name,
+         p_ar->mcr_request[ix].provider_station_name);
+      p_ar->mcr_request[ix].provider_station_name
+         [p_ar->mcr_request[ix].length_provider_station_name] = '\0';
+      p_info->result = PF_PARSE_OK;
+   }
 }
 #endif
 
@@ -694,6 +798,11 @@ void pf_get_ar_vendor_request (
    uint16_t ix,
    pf_ar_t * p_ar)
 {
+   if (ix >= PNET_MAX_AR_VENDOR_BLOCKS)
+   {
+      return;
+   }
+
    p_ar->ar_vendor_request[ix].ap_structure_identifier =
       pf_get_uint32 (p_info, p_pos);
    p_ar->ar_vendor_request[ix].api = pf_get_uint32 (p_info, p_pos);
@@ -724,16 +833,49 @@ void pf_get_control (
    p_req->control_block_properties = pf_get_uint16 (p_info, p_pos);
 }
 
-void pf_get_ndr_data (
+int pf_get_ndr_data_req (
    pf_get_info_t * p_info,
    uint16_t * p_pos,
    pf_ndr_data_t * p_ndr)
 {
+   int ret = 0;
    p_ndr->args_maximum = pf_get_uint32 (p_info, p_pos);
    p_ndr->args_length = pf_get_uint32 (p_info, p_pos);
    p_ndr->array.maximum_count = pf_get_uint32 (p_info, p_pos);
    p_ndr->array.offset = pf_get_uint32 (p_info, p_pos);
    p_ndr->array.actual_count = pf_get_uint32 (p_info, p_pos);
+
+   /* Check values according to 4.10.3.4 in PN-AL-Protocol (NDRData) */
+   if (
+      p_ndr->args_maximum < p_ndr->args_length ||
+      p_ndr->args_maximum < p_ndr->array.maximum_count ||
+      p_ndr->array.maximum_count < p_ndr->args_length ||
+      p_ndr->args_length != p_ndr->array.actual_count)
+   {
+      ret = -1;
+   }
+
+   /* 4.10.3.4.4 */
+   if (p_ndr->array.offset != 0)
+   {
+      ret = -1;
+   }
+
+   return ret;
+}
+
+int pf_get_ndr_data_rsp (
+   pf_get_info_t * p_info,
+   uint16_t * p_pos,
+   pf_ndr_data_t * p_ndr)
+{
+   p_ndr->pnio_status = pf_get_uint32 (p_info, p_pos);
+   p_ndr->args_length = pf_get_uint32 (p_info, p_pos);
+   p_ndr->array.maximum_count = pf_get_uint32 (p_info, p_pos);
+   p_ndr->array.offset = pf_get_uint32 (p_info, p_pos);
+   p_ndr->array.actual_count = pf_get_uint32 (p_info, p_pos);
+
+   return 0;
 }
 
 void pf_get_dce_rpc_header (

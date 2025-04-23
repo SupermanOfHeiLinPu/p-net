@@ -295,7 +295,7 @@ int pf_cmina_set_default_cfg (pnet_t * net, uint16_t reset_mode)
           * in all supported reset modes. This seems to contradict
           * PN-AL-Services ch. 6.3.11.3.2.
           */
-         pf_snmp_data_clear (net);
+         pf_snmp_data_reset (net, true);
 #endif
       }
 
@@ -327,10 +327,11 @@ int pf_cmina_set_default_cfg (pnet_t * net, uint16_t reset_mode)
             net->cmina_nonvolatile_dcp_ase.station_name,
             true);
 
-         pf_file_clear (p_file_directory, PF_FILENAME_IP);
-         pf_file_clear (p_file_directory, PF_FILENAME_DIAGNOSTICS);
+         pf_bg_worker_start_job (net, PF_BGJOB_CLEAR_IP_SETTINGS_FILE);
+         pf_bg_worker_start_job (net, PF_BGJOB_CLEAR_DIAGNOSTICS_FILE);
+
 #if PNET_OPTION_SNMP
-         pf_snmp_data_clear (net);
+         pf_snmp_data_reset (net, false);
 #endif
          pf_pdport_reset_all (net);
       }

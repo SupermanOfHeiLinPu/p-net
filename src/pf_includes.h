@@ -25,7 +25,7 @@
 extern "C" {
 #endif
 
-#include "options.h"
+#include "pnet_options.h"
 #include "osal.h"
 #include "osal_log.h"
 #include "pnal.h"

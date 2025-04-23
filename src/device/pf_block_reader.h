@@ -63,7 +63,7 @@ void pf_get_mem (
    void * p_dest);
 
 /**
- * Extract a NDR header from a buffer.
+ * Extract a NDR header from a request buffer.
  *
  * This is the first part of the payload of the incoming DCE/RPC message
  * (which is sent via UDP).
@@ -73,8 +73,24 @@ void pf_get_mem (
  * @param p_info           InOut: The parser state.
  * @param p_pos            InOut: Position in the buffer.
  * @param p_ndr            Out:   Destination buffer.
+ * @return 0 on success, -1 if values are invalid.
  */
-void pf_get_ndr_data (
+int pf_get_ndr_data_req (
+   pf_get_info_t * p_info,
+   uint16_t * p_pos,
+   pf_ndr_data_t * p_ndr);
+
+/**
+ * Extract a NDR header from a response buffer.
+ *
+ * Reads pnio_status, args_length, maximum_count, offset and actual_count.
+ *
+ * @param p_info           InOut: The parser state.
+ * @param p_pos            InOut: Position in the buffer.
+ * @param p_ndr            Out:   Destination buffer.
+ * @return 0 on success, -1 if values are invalid.
+ */
+int pf_get_ndr_data_rsp (
    pf_get_info_t * p_info,
    uint16_t * p_pos,
    pf_ndr_data_t * p_ndr);
@@ -109,13 +125,15 @@ void pf_get_ar_param (pf_get_info_t * p_info, uint16_t * p_pos, pf_ar_t * p_ar);
  * @param p_pos            InOut: Position in the buffer.
  * @param ix               In:    The current index into p_ar->iocr[].
  * @param p_ar             Out:   Contains the destination structure.
- * @return 0 on success, -1 if out of resources
+ * @param p_result         Out:   Detailed error information if return != 0.
+ * @return 0 on success, -1 if an error was found.
  */
 int pf_get_iocr_param (
    pf_get_info_t * p_info,
    uint16_t * p_pos,
    uint16_t ix,
-   pf_ar_t * p_ar);
+   pf_ar_t * p_ar,
+   pnet_result_t * p_result);
 
 /**
  * Extract an expected API block from a buffer.
@@ -199,8 +217,9 @@ void pf_get_mcr_request (
  * @param p_info           InOut: The parser state.
  * @param p_pos            InOut: Position in the buffer.
  * @param p_ar             Out:   Contains the destination structure.
+ * @return 0 on success, ErrorCode2 on failure.
  */
-void pf_get_ir_info_request (
+uint8_t pf_get_ir_info_request (
    pf_get_info_t * p_info,
    uint16_t * p_pos,
    pf_ar_t * p_ar);
